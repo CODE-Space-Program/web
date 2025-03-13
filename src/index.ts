@@ -45,6 +45,22 @@ export async function buildFastify(): Promise<FastifyInstance> {
     });
   });
 
+  // this is a polling endpoint: while we don't have events, it will keep waiting
+  app.get<{ Params: { flightId: string } }>(
+    "/api/flights/:flightId/events",
+    async (req, reply) => {
+      const { flightId } = req.params;
+
+      reply.send({
+        data: [
+          {
+            command: "start",
+          },
+        ],
+      });
+    }
+  );
+
   app.post<{
     Body: LogDocument["data"] & Pick<LogDocument, "sent">;
     Params: { flightId: string };
