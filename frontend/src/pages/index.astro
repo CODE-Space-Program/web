@@ -1,0 +1,103 @@
+---
+import Layout from "../layouts/Layout.astro";
+
+import background from "../assets/image.png";
+import Header from "../components/Header.astro";
+import Footer from "../components/Footer.astro";
+---
+
+<Layout>
+  <Header />
+  <img
+    src={background.src}
+    alt=""
+    fetchpriority="high"
+    id="background"
+    style="object-fit: cover"
+  />
+
+  <div class="inner-left-bottom">
+    <h1>CODE Space Program</h1>
+    <p>
+      <a
+        href="https://code.berlin"
+        aria-label="Page with all past and future launches"
+        target="_blank">CODE</a
+      > project about building rockets from scratch
+    </p>
+  </div>
+
+  <!-- <VehicleStats /> -->
+
+  <!-- <iframe
+    width="560"
+    height="315"
+    src="https://www.youtube.com/embed/3KePcASD0NQ?si=F5SwQ74Ko9KXhTvF"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    referrerpolicy="strict-origin-when-cross-origin"
+    allowfullscreen></iframe> -->
+
+  <Footer />
+</Layout>
+
+<style>
+  body {
+    font:
+      16px/26px D-DIN-Regular,
+      Arial,
+      Verdana,
+      sans-serif;
+
+    color: white;
+  }
+  #background {
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+
+    /* mask-image: url("logo.svg");
+    mask-repeat: no-repeat;
+    mask-position: 70%; */
+  }
+  body {
+    background: black;
+  }
+
+  .inner-left-bottom {
+    max-width: 420px;
+
+    width: 50%;
+
+    position: absolute;
+
+    top: 50%;
+    left: 50px;
+  }
+
+  h1 {
+    max-width: 90%;
+    font-size: 48px;
+    line-height: 48px;
+
+    margin: 0;
+
+    text-transform: uppercase;
+  }
+  p {
+    margin-top: 20px;
+    margin-bottom: 15px;
+
+    line-height: 1.6;
+
+    font-size: 1rem;
+  }
+
+  a {
+    color: #fff;
+    text-decoration: none;
+
+    font-weight: 700;
+  }
+</style>

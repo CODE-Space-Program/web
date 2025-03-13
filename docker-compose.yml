@@ -1,0 +1,25 @@
+version: "3.8"
+services:
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+    environment:
+      PUBLIC_URL: http://localhost:3000
+      PORT: 3000
+      CORS_ORIGINS: http://localhost:4321
+      MONGO_URI: mongodb://mongo:27017/yourdb
+
+volumes:
+  mongo_data:
