@@ -70,4 +70,81 @@
     font-weight: 400;
     font-display: block;
   }
+
+  :global(.inner-left-bottom) {
+    max-width: 420px;
+
+    width: 50%;
+
+    position: absolute;
+
+    top: 50%;
+    left: 50px;
+  }
+
+  :global(h1) {
+    max-width: 90%;
+    font-size: 48px;
+    line-height: 48px;
+
+    margin: 0;
+
+    text-transform: uppercase;
+  }
+  :global(p) {
+    margin-top: 20px;
+    margin-bottom: 15px;
+
+    line-height: 1.6;
+
+    font-size: 1rem;
+  }
+
+  :global(body) {
+    font:
+      16px/26px D-DIN-Regular,
+      Arial,
+      Verdana,
+      sans-serif;
+
+    color: white;
+  }
+  :global(.button) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    height: 54px;
+
+    padding: 0 1rem;
+
+    background: none;
+
+    min-width: 8rem;
+
+    font:
+      14px/50px D-DIN-Bold,
+      Arial,
+      Verdana,
+      sans-serif;
+    color: #fff;
+
+    border: 2px solid #fff;
+
+    transition-duration: 100ms;
+
+    text-transform: uppercase;
+
+    cursor: pointer;
+
+    text-decoration: none;
+  }
+  :global(.button:hover) {
+    background: #fff;
+    color: black;
+  }
+
+  :global(*) {
+    box-sizing: border-box;
+  }
 </style>
