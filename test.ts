@@ -1,4 +1,6 @@
-const flightRes = await fetch("http://localhost:3000/api/flights", {
+const BASE_URL = "http://localhost:4321";
+
+const flightRes = await fetch(`${BASE_URL}/api/flights`, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
@@ -10,7 +12,7 @@ const flightData = await flightRes.json();
 console.log(flightData);
 
 const res = await fetch(
-  `http://localhost:3000/api/flights/${flightData.data.flightId}/logs`,
+  `${BASE_URL}/api/flights/${flightData.data.flightId}/logs`,
   {
     method: "POST",
     headers: {

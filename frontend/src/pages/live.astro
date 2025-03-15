@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import Chart from "../components/Chart";
 import background from "../assets/rocket.jpg";
 import Charts from "../components/Charts";
+import { FlightControls } from "../components/FlightControls";
 ---
 
 <Layout>
@@ -10,7 +11,9 @@ import Charts from "../components/Charts";
   <img src={background.src} alt="Rocket" fetchpriority="high" id="background" />
 
   <div style="width: 100vw; height: 40vh">
-    <Charts client:visible />
+    <!-- <Charts client:visible /> -->
+
+    <FlightControls client:visible />
   </div>
 </Layout>
 
