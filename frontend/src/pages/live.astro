@@ -4,17 +4,39 @@ import Chart from "../components/Chart";
 import background from "../assets/rocket.jpg";
 import Charts from "../components/Charts";
 import { FlightControls } from "../components/FlightControls";
+
+// export const prerender = false;
+
+// const isLoggedIn = Astro.cookies.has("token");
+
+const isLoggedIn = true;
+
+// if (Astro.cookies.has("token")) {
+//   const cookie = Astro.cookies.get("token");
+//   const value = cookie?.value;
+// }
 ---
 
 <Layout>
   <img src="/logo.svg" alt="Astro logo" width="200" />
   <img src={background.src} alt="Rocket" fetchpriority="high" id="background" />
 
-  <div style="width: 100vw; height: 40vh">
-    <!-- <Charts client:visible /> -->
+  <!-- <div style="width: 100vw; height: 40vh">
+    {
+      isLoggedIn ? (
+        <Charts client:visible />
+      ) : (
+        <p>
+          Please log in to see the chart.{" "}
+          <a href="/login" aria-label="Login page">
+            Login
+          </a>
+        </p>
+      )
+    }
+  </div> -->
 
-    <FlightControls client:visible />
-  </div>
+  <FlightControls client:visible />
 </Layout>
 
 <style>

@@ -1,0 +1,15 @@
+---
+import ArtificialHorizon from "../components/ArtificialHorizon";
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <div style="background: red; min-height: 100vh">
+    <ArtificialHorizon client:visible pitch={0} roll={0} />
+    <ArtificialHorizon client:visible pitch={0.5} roll={0} />
+    <ArtificialHorizon client:visible pitch={0} roll={0.5} />
+    <ArtificialHorizon client:visible pitch={0.5} roll={0.5} />
+
+    <ArtificialHorizon client:visible pitch={-0.5} roll={-0.5} />
+  </div>
+</Layout>

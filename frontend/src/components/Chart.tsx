@@ -14,16 +14,23 @@ import {
 ChartJS.register(LineElement, PointElement, LinearScale, Title, CategoryScale);
 
 export interface ChartProps {
+  lookbackMs?: number;
   data: { time: number; value: number }[];
   xAxis: string;
   yAxis: string;
 }
-const Chart: React.FC<ChartProps> = ({ data, xAxis, yAxis }) => {
+const Chart: React.FC<ChartProps> = ({ lookbackMs, data, xAxis, yAxis }) => {
+  const latestData = data[data.length - 1];
+
+  const slicedData = lookbackMs
+    ? data.filter((d) => latestData.time - d.time < lookbackMs)
+    : data;
+
   const chartData = {
-    labels: data.map((d) => d.time),
+    labels: slicedData.map((d) => d.time),
     datasets: [
       {
-        data: data.map((d) => d.value),
+        data: slicedData.map((d) => d.value),
         borderColor: "rgba(255, 255, 255, 0.8)",
         backgroundColor: "white",
         fill: true,

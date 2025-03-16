@@ -161,9 +161,9 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
 
   return (
     <>
-      <a href={getGoogleAuthUrl()} aria-label="Login with Google">
+      {/* <a href={getGoogleAuthUrl()} aria-label="Login with Google">
         Login with Google
-      </a>
+      </a> */}
       <div className="inner-left-bottom">
         <h1>Ground Control</h1>
         <p style={{ marginBottom: 0 }}>Flight ID: {data.id}</p>
@@ -186,7 +186,6 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
         <div
           style={{
             display: "flex",
-            height: "100%",
             maxWidth: "420px",
             width: "100%",
 
@@ -197,6 +196,7 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
           }}
         >
           <Chart
+            lookbackMs={10000}
             data={logs.map((i) => ({
               time: i.sent - startTime,
               value: i.data.altitude,
