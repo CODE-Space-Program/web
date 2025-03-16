@@ -12,6 +12,7 @@ import type {
   ClientToServerEvents,
   LogDocument,
 } from "../../../src/socket";
+import { useInterval } from "./useInterval";
 
 export async function getSocket(): Promise<
   Socket<ServerToClientEvents, ClientToServerEvents>
@@ -22,15 +23,32 @@ export async function getSocket(): Promise<
   return socket;
 }
 
-function useLiveLogs(flightId?: string) {
+function useCurrentTime() {
+  const [currentTime, setCurrentTime] = useState(Date.now());
+
+  useInterval(() => {
+    setCurrentTime(Date.now());
+  }, 1000);
+
+  return currentTime;
+}
+
+function useLogs(flightId?: string) {
   const [logs, setLogs] = useState<LogDocument[]>([]);
 
   const socket =
     useRef<Socket<ServerToClientEvents, ClientToServerEvents>>(null);
 
   useEffect(() => {
-    getSocket().then((newSocket) => {
+    if (!flightId) return;
+
+    getSocket().then(async (newSocket) => {
       socket.current = newSocket;
+
+      const logsRes = await fetch(`/api/flights/${flightId}/logs`);
+      const logsData = await logsRes.json();
+
+      setLogs(logsData.data);
 
       newSocket.on("log", (data) => {
         if (data.flightId !== flightId) return;
@@ -38,11 +56,15 @@ function useLiveLogs(flightId?: string) {
         setLogs((prevLogs) => [...prevLogs, data]);
       });
     });
-  }, []);
+  }, [flightId]);
 
   const lastLogTimestamp: number | null = logs[logs.length - 1]?.received;
 
-  return { logs, lastLogTimestamp };
+  const isInProgress = lastLogTimestamp
+    ? Date.now() - lastLogTimestamp < 2000
+    : false;
+
+  return { logs, lastLogTimestamp, isInProgress };
 }
 
 async function fetchCurrentFlight() {
@@ -64,9 +86,12 @@ const useCurrentFlight = () =>
 export interface FlightControlProps {}
 
 export const FlightControlss: React.FC<FlightControlProps> = () => {
+  // rerender timestamp every second
+  useCurrentTime();
+
   const { data, isLoading, error } = useCurrentFlight();
 
-  const { logs, lastLogTimestamp } = useLiveLogs(data?.id);
+  const { logs, lastLogTimestamp, isInProgress } = useLogs(data?.id);
 
   const onTakeoffClick = async () => {
     if (!data?.id) return;
@@ -105,17 +130,18 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
     return <div>No flight in process.</div>;
   }
 
-  const logStatus = lastLogTimestamp
-    ? `Last update: ${dayjs(lastLogTimestamp).fromNow()}`
+  const lastUpdateString = lastLogTimestamp
+    ? isInProgress
+      ? "Receiving data"
+      : `Last update ${dayjs(lastLogTimestamp).fromNow()}`
     : "No data yet";
 
   return (
     <>
       <div className="inner-left-bottom">
         <h1>Ground Control</h1>
-        <p>
-          Flight ID: {data.id} - {logStatus}
-        </p>
+        <p style={{ marginBottom: 0 }}>Flight ID: {data.id}</p>
+        <p style={{ marginTop: 0 }}>{lastUpdateString}</p>
         <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
           <button onClick={onTakeoffClick} className="button">
             Takeoff
