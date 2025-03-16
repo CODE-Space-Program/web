@@ -179,7 +179,11 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
           >
             View Logs ({logs.length})
           </a>
-          <ArtificialHorizon pitch={0} roll={0} size="54px" />
+          <ArtificialHorizon
+            pitch={(logs[logs.length - 1]?.data.pitch || 0) / 180}
+            roll={(logs[logs.length - 1]?.data.yaw || 0) / 180}
+            size="54px"
+          />
         </div>
       </div>
       {logs.length && (
