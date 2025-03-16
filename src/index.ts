@@ -173,24 +173,27 @@ export async function buildFastify(): Promise<FastifyInstance> {
   );
 
   app.post<{
-    Body: LogDocument["data"] & Pick<LogDocument, "sent">;
+    Body: { data: (LogDocument["data"] & Pick<LogDocument, "sent">)[] };
     Params: { flightId: string };
   }>("/api/flights/:flightId/logs", async (req, reply) => {
     try {
       const { flightId } = req.params;
-      const { sent, ...data } = req.body;
 
-      const log = {
-        flightId,
-        sent,
-        received: Date.now(),
-        data,
-      };
-      await logsCollection.insertOne(log);
+      const newLogs = req.body.data.map((i) => {
+        const { sent, ...data } = i;
+
+        return {
+          flightId,
+          sent,
+          received: Date.now(),
+          data,
+        };
+      });
+      await logsCollection.insertMany(newLogs);
 
       try {
         for (const socket of sockets) {
-          socket.emit("log", log);
+          socket.emit("logs", newLogs);
         }
       } catch (err) {}
 
@@ -245,7 +248,7 @@ async function main(): Promise<void> {
 main();
 
 export interface ServerToClientEvents {
-  log: (data: LogDocument) => void;
+  logs: (data: LogDocument[]) => void;
 }
 
 export interface ClientToServerEvents {}

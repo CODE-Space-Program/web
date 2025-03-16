@@ -13,16 +13,11 @@ export interface LogDocument {
   sent: number;
   received: number;
   data: {
-    gyro: {
-      x: number;
-      y: number;
-      z: number;
-    };
-    acc: {
-      x: number;
-      y: number;
-      z: number;
-    };
+    gyro_x: number;
+    gyro_y: number;
+    gyro_z: number;
+    pitch: number;
+    yaw: number;
     pressure: number;
     altitude: number;
     temperature: number;

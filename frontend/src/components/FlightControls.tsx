@@ -61,10 +61,11 @@ function useLogs(flightId?: string) {
 
       setLogs(logsData.data);
 
-      newSocket.on("log", (data) => {
-        if (data.flightId !== flightId) return;
-
-        setLogs((prevLogs) => [...prevLogs, data]);
+      newSocket.on("logs", (data) => {
+        setLogs((prevLogs) => [
+          ...prevLogs,
+          ...data.filter((i) => i.flightId === flightId),
+        ]);
       });
     });
   }, [flightId]);
