@@ -187,7 +187,7 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
           />
         </div>
       </div>
-      {logs.length && (
+      {logs.length > 1 && (
         <div
           style={{
             display: "flex",

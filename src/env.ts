@@ -29,4 +29,11 @@ export const env = {
   mongodb: {
     uri: assertEnvString("MONGO_URI"),
   },
+  jwt: {
+    secret: assertEnvString("JWT_SECRET"),
+  },
+  google: {
+    clientId: assertEnvString("GOOGLE_CLIENT_ID"),
+    clientSecret: assertEnvString("GOOGLE_CLIENT_SECRET"),
+  },
 };

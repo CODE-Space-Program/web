@@ -11,6 +11,7 @@ import type { Server, Socket } from "socket.io";
 
 import { env } from "./env";
 import { logsCollection, type LogDocument } from "./db";
+import { generateDeviceToken, generateUserToken } from "./jwt";
 
 const sockets = new Set<Socket<ClientToServerEvents, ServerToClientEvents>>();
 
@@ -54,7 +55,9 @@ class Commands {
 const commands = new Commands();
 
 export async function buildFastify(): Promise<FastifyInstance> {
-  const app = Fastify() as unknown as FastifyInstance & { io: Server };
+  const app = Fastify({ logger: true }) as unknown as FastifyInstance & {
+    io: Server;
+  };
 
   await app.register(fastifyCors, { origin: env.corsOrigins });
   await app.register(fastifyHelmet, {
@@ -84,11 +87,69 @@ export async function buildFastify(): Promise<FastifyInstance> {
   });
 
   app.post("/api/flights", async (req, reply) => {
+    const flightId = crypto.randomUUID();
+
+    const token = generateDeviceToken(flightId);
+
     reply.send({
       data: {
-        flightId: crypto.randomUUID(),
+        flightId,
+        token,
       },
     });
+  });
+
+  app.get<{
+    Querystring: { code: string };
+  }>("/api/auth/google/callback", async (req, reply) => {
+    const tokenResponse = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_id: env.google.clientId,
+        client_secret: env.google.clientSecret,
+        code: req.query.code,
+        grant_type: "authorization_code",
+        redirect_uri: env.publicUrl + "/api/auth/google/callback",
+      }).toString(),
+    }).then((res) => res.json());
+
+    const accessToken = tokenResponse.access_token;
+
+    if (!accessToken) {
+      reply.status(400).send({ error: "Failed to obtain access token" });
+      return;
+    }
+
+    const userInfo = await fetch(
+      "https://www.googleapis.com/oauth2/v1/userinfo",
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    ).then((res) => res.json());
+
+    console.log("userInfo:", userInfo);
+
+    if (!userInfo.email) {
+      reply.status(400).send({ error: "Failed to obtain user email" });
+      return;
+    }
+    const whitelistedEmails = [
+      "linus.bolls@code.berlin",
+      "ava.hurst@code.berlin",
+      "alexandru.danciu@code.berlin",
+      "jeel.thummar@code.berlin",
+    ];
+
+    if (!whitelistedEmails.includes(userInfo.email)) {
+      reply.status(403).send({ error: "Email not whitelisted" });
+      return;
+    }
+    const token = await generateUserToken(userInfo.email);
+
+    reply.redirect(`/?token=${token}`);
   });
 
   app.get("/api/flights", async (req, reply) => {

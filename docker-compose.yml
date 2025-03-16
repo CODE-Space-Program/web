@@ -16,10 +16,10 @@ services:
     depends_on:
       - mongo
     environment:
-      PUBLIC_URL: http://localhost:3000
       PORT: 3000
       CORS_ORIGINS: http://localhost:4321
       MONGO_URI: mongodb://mongo:27017/yourdb
+    env_file: ".env"
 
 volumes:
   mongo_data:
