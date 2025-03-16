@@ -4,8 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
-dayjs.extend(relativeTime);
-
 import { withQueryClientProvider } from "./withQueryClientProvider";
 import type {
   ServerToClientEvents,
@@ -13,20 +11,22 @@ import type {
   LogDocument,
 } from "../../../src/socket";
 import { useInterval } from "./useInterval";
+import ArtificialHorizon from "./ArtificialHorizon";
+import Chart from "./Chart";
+
+dayjs.extend(relativeTime);
+
+const getQualifiedUrl = () =>
+  window.location.protocol +
+  "//" +
+  window.location.hostname +
+  (window.location.hostname === "localhost" ? ":" + window.location.port : "");
 
 export async function getSocket(): Promise<
   Socket<ServerToClientEvents, ClientToServerEvents>
 > {
-  const websocketHost =
-    window.location.protocol +
-    "//" +
-    window.location.hostname +
-    (window.location.hostname === "localhost"
-      ? ":" + window.location.port
-      : "");
-
   const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
-    websocketHost,
+    getQualifiedUrl(),
     {
       transports: ["websocket"],
     }
@@ -141,14 +141,29 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
     return <div>No flight in process.</div>;
   }
 
+  function getGoogleAuthUrl() {
+    const clientId =
+      "362081384026-k7jclf68lclap0am9qocuoojons27j1d.apps.googleusercontent.com";
+    const redirectUri = getQualifiedUrl() + "/api/auth/google/callback";
+
+    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
+
+    return googleAuthUrl;
+  }
+
   const lastUpdateString = lastLogTimestamp
     ? isInProgress
       ? "Receiving data"
       : `Last update ${dayjs(lastLogTimestamp).fromNow()}`
     : "No data yet";
 
+  const startTime = logs[0]?.sent;
+
   return (
     <>
+      <a href={getGoogleAuthUrl()} aria-label="Login with Google">
+        Login with Google
+      </a>
       <div className="inner-left-bottom">
         <h1>Ground Control</h1>
         <p style={{ marginBottom: 0 }}>Flight ID: {data.id}</p>
@@ -164,8 +179,33 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
           >
             View Logs ({logs.length})
           </a>
+          <ArtificialHorizon pitch={0} roll={0} size="54px" />
         </div>
       </div>
+      {logs.length && (
+        <div
+          style={{
+            display: "flex",
+            height: "100%",
+            maxWidth: "420px",
+            width: "100%",
+
+            position: "absolute",
+
+            top: "50%",
+            right: "50px",
+          }}
+        >
+          <Chart
+            data={logs.map((i) => ({
+              time: i.sent - startTime,
+              value: i.data.altitude,
+            }))}
+            xAxis="Time (ms)"
+            yAxis="Altitude (m)"
+          />
+        </div>
+      )}
     </>
   );
 };

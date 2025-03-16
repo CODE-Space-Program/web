@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -14,33 +14,16 @@ import {
 ChartJS.register(LineElement, PointElement, LinearScale, Title, CategoryScale);
 
 export interface ChartProps {
+  data: { time: number; value: number }[];
   xAxis: string;
   yAxis: string;
 }
-const Chart: React.FC<ChartProps> = ({ xAxis, yAxis }) => {
-  const [flightData, setFlightData] = useState<
-    { time: number; altitude: number }[]
-  >([]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFlightData((prevData) => {
-        const time =
-          prevData.length > 0 ? prevData[prevData.length - 1].time + 1 : 0;
-        const altitude = Math.sin(time * 0.1) * 100 + 100; // Simulated altitude
-
-        return [...prevData.slice(-20), { time, altitude }]; // Keep last 20 points
-      });
-    }, 100);
-
-    return () => clearInterval(interval);
-  }, []);
-
+const Chart: React.FC<ChartProps> = ({ data, xAxis, yAxis }) => {
   const chartData = {
-    labels: flightData.map((d) => d.time),
+    labels: data.map((d) => d.time),
     datasets: [
       {
-        data: flightData.map((d) => d.altitude),
+        data: data.map((d) => d.value),
         borderColor: "rgba(255, 255, 255, 0.8)",
         backgroundColor: "white",
         fill: true,
@@ -72,5 +55,4 @@ const Chart: React.FC<ChartProps> = ({ xAxis, yAxis }) => {
 
   return <Line data={chartData} options={chartOptions} />;
 };
-
 export default Chart;
