@@ -17,9 +17,20 @@ import { useInterval } from "./useInterval";
 export async function getSocket(): Promise<
   Socket<ServerToClientEvents, ClientToServerEvents>
 > {
-  const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io("", {
-    transports: ["websocket"],
-  });
+  const websocketHost =
+    window.location.protocol +
+    "//" +
+    window.location.hostname +
+    (window.location.hostname === "localhost"
+      ? ":" + window.location.port
+      : "");
+
+  const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
+    websocketHost,
+    {
+      transports: ["websocket"],
+    }
+  );
   return socket;
 }
 
