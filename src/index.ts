@@ -6,9 +6,13 @@ import fastifyHelmet from "@fastify/helmet";
 import fastifyStatic from "@fastify/static";
 import Fastify, { type FastifyInstance } from "fastify";
 import mitt from "mitt";
+import fastifySocketIO from "fastify-socket.io";
+import type { Server, Socket } from "socket.io";
 
 import { env } from "./env";
 import { logsCollection, type LogDocument } from "./db";
+
+const sockets = new Set<Socket<ClientToServerEvents, ServerToClientEvents>>();
 
 class Commands {
   public events = mitt<{
@@ -50,7 +54,7 @@ class Commands {
 const commands = new Commands();
 
 export async function buildFastify(): Promise<FastifyInstance> {
-  const app = Fastify();
+  const app = Fastify() as unknown as FastifyInstance & { io: Server };
 
   await app.register(fastifyCors, { origin: env.corsOrigins });
   await app.register(fastifyHelmet, {
@@ -63,6 +67,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
       },
     },
   });
+  await app.register(fastifySocketIO);
 
   await app.register(fastifyStatic, {
     root: path.join(__dirname, "../frontend/dist"),
@@ -70,6 +75,8 @@ export async function buildFastify(): Promise<FastifyInstance> {
 
   app.ready((err) => {
     if (err) throw err;
+
+    initSocketHandlers(app.io);
   });
 
   app.get("/", async function (req, reply) {
@@ -173,12 +180,20 @@ export async function buildFastify(): Promise<FastifyInstance> {
       const { flightId } = req.params;
       const { sent, ...data } = req.body;
 
-      await logsCollection.insertOne({
+      const log = {
         flightId,
         sent,
         received: Date.now(),
         data,
-      });
+      };
+      await logsCollection.insertOne(log);
+
+      try {
+        for (const socket of sockets) {
+          socket.emit("log", log);
+        }
+      } catch (err) {}
+
       reply.send({
         data: {
           ok: true,
@@ -228,3 +243,24 @@ async function main(): Promise<void> {
   });
 }
 main();
+
+export interface ServerToClientEvents {
+  log: (data: LogDocument) => void;
+}
+
+export interface ClientToServerEvents {}
+
+export function initSocketHandlers(
+  io: Server<ClientToServerEvents, ServerToClientEvents>
+): void {
+  io.on(
+    "connection",
+    (socket: Socket<ClientToServerEvents, ServerToClientEvents>) => {
+      sockets.add(socket);
+
+      socket.on("disconnect", () => {
+        sockets.delete(socket);
+      });
+    }
+  );
+}

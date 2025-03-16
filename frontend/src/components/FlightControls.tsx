@@ -1,6 +1,49 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { io, type Socket } from "socket.io-client";
 import { useQuery } from "@tanstack/react-query";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
+
 import { withQueryClientProvider } from "./withQueryClientProvider";
+import type {
+  ServerToClientEvents,
+  ClientToServerEvents,
+  LogDocument,
+} from "../../../src/socket";
+
+export async function getSocket(): Promise<
+  Socket<ServerToClientEvents, ClientToServerEvents>
+> {
+  const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io("", {
+    transports: ["websocket"],
+  });
+  return socket;
+}
+
+function useLiveLogs(flightId?: string) {
+  const [logs, setLogs] = useState<LogDocument[]>([]);
+
+  const socket =
+    useRef<Socket<ServerToClientEvents, ClientToServerEvents>>(null);
+
+  useEffect(() => {
+    getSocket().then((newSocket) => {
+      socket.current = newSocket;
+
+      newSocket.on("log", (data) => {
+        if (data.flightId !== flightId) return;
+
+        setLogs((prevLogs) => [...prevLogs, data]);
+      });
+    });
+  }, []);
+
+  const lastLogTimestamp: number | null = logs[logs.length - 1]?.received;
+
+  return { logs, lastLogTimestamp };
+}
 
 async function fetchCurrentFlight() {
   const currentFlightRes = await fetch("/api/flights");
@@ -22,6 +65,8 @@ export interface FlightControlProps {}
 
 export const FlightControlss: React.FC<FlightControlProps> = () => {
   const { data, isLoading, error } = useCurrentFlight();
+
+  const { logs, lastLogTimestamp } = useLiveLogs(data?.id);
 
   const onTakeoffClick = async () => {
     if (!data?.id) return;
@@ -60,11 +105,17 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
     return <div>No flight in process.</div>;
   }
 
+  const logStatus = lastLogTimestamp
+    ? `Last update: ${dayjs(lastLogTimestamp).fromNow()}`
+    : "No data yet";
+
   return (
     <>
       <div className="inner-left-bottom">
         <h1>Ground Control</h1>
-        <p>Flight ID: {data.id}</p>
+        <p>
+          Flight ID: {data.id} - {logStatus}
+        </p>
         <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
           <button onClick={onTakeoffClick} className="button">
             Takeoff
@@ -74,7 +125,7 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
             href={`/api/flights/${data.id}/logs`}
             className="button"
           >
-            View Logs
+            View Logs ({logs.length})
           </a>
         </div>
       </div>
