@@ -133,13 +133,28 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="inner-left-bottom">
+        <h1>Ground Control</h1>
+        <p>Loading...</p>
+      </div>
+    );
   }
   if (error) {
-    return <div>Error :(</div>;
+    return (
+      <div className="inner-left-bottom">
+        <h1>Ground Control</h1>
+        <p>An error occurred</p>
+      </div>
+    );
   }
   if (!data) {
-    return <div>No flight in process.</div>;
+    return (
+      <div className="inner-left-bottom">
+        <h1>Ground Control</h1>
+        <p>No flight in progress</p>
+      </div>
+    );
   }
 
   function getGoogleAuthUrl() {
@@ -187,7 +202,7 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
           />
         </div>
       </div>
-      {logs.length > 1 && (
+      {logs.length > 1 ? (
         <div
           style={{
             display: "flex",
@@ -210,7 +225,7 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
             yAxis="Altitude (m)"
           />
         </div>
-      )}
+      ) : null}
     </>
   );
 };
