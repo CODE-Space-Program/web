@@ -1,16 +1,5 @@
 ---
 import { LoginButton } from "./LoginButton";
-
-// const clientId =
-//   "362081384026-k7jclf68lclap0am9qocuoojons27j1d.apps.googleusercontent.com";
-// const redirectUri = getQualifiedUrl() + "/api/auth/google/callback";
-
-// const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
-
-const isLoggedIn =
-  typeof window === "undefined"
-    ? Astro.cookies.has("auth")
-    : document.cookie.includes("auth");
 ---
 
 <div id="footer" role="navigation">
@@ -18,15 +7,7 @@ const isLoggedIn =
     <a href="/imprint" aria-label="Imprint and contact info" class="social"
       >IMPRINT</a
     >
-    {
-      isLoggedIn ? (
-        <a href="/api/logout" aria-label="Logout">
-          LOGOUT
-        </a>
-      ) : (
-        <LoginButton client:visible />
-      )
-    }
+    <LoginButton client:visible />
   </p>
 </div>
 

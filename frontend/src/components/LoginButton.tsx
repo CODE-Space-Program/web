@@ -19,9 +19,13 @@ function getGoogleAuthUrl() {
 }
 
 export function LoginButton() {
-  return (
+  return typeof window !== "undefined" && document.cookie.includes("auth") ? (
     <a href={getGoogleAuthUrl()} aria-label="Login with Google">
       LOGIN
+    </a>
+  ) : (
+    <a href="/api/logout" aria-label="Logout">
+      LOGOUT
     </a>
   );
 }

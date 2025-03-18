@@ -3,16 +3,17 @@ import Layout from "../layouts/Layout.astro";
 import background from "../assets/rocket.jpg";
 import { FlightControls } from "../components/FlightControls";
 
-if (typeof window !== "undefined" && document.cookie.includes("auth")) {
-  return Astro.redirect("/");
-}
-
 // export const prerender = false;
 
 // const isLoggedIn = Astro.cookies.has("token");
 ---
 
 <Layout>
+  <script>
+    if (document.cookie.includes("auth")) {
+      window.location.href = "/";
+    }
+  </script>
   <img src="/logo.svg" alt="Astro logo" width="200" />
   <img src={background.src} alt="Rocket" fetchpriority="high" id="background" />
 
