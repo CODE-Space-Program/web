@@ -12,12 +12,8 @@ import type { Server, Socket } from "socket.io";
 
 import { env } from "./env";
 import { logsCollection, type LogDocument } from "./db";
-import {
-  generateDeviceToken,
-  generateUserToken,
-  verifyDeviceToken,
-  verifyUserToken,
-} from "./jwt";
+import { generateDeviceToken, generateUserToken } from "./jwt";
+import { assertFlightIdMatchesDevice, assertUserToken } from "./authGuards";
 
 const sockets = new Set<Socket<ClientToServerEvents, ServerToClientEvents>>();
 
@@ -170,104 +166,70 @@ export async function buildFastify(): Promise<FastifyInstance> {
     reply.redirect("/");
   });
 
-  app.get("/api/flights", async (req, reply) => {
-    try {
-      await verifyUserToken(req.cookies.auth!);
-    } catch (err) {
-      reply.status(401).send({
-        error: "Unauthorized",
+  app.get(
+    "/api/flights",
+    { preHandler: assertUserToken },
+    async (req, reply) => {
+      const totalNumFlights = await logsCollection.distinct("flightId");
+
+      const flights = await logsCollection
+        .aggregate([
+          {
+            $group: {
+              _id: "$flightId",
+              received: { $max: "$received" },
+            },
+          },
+          {
+            $sort: {
+              received: -1,
+            },
+          },
+          {
+            $limit: 10,
+          },
+        ])
+        .toArray();
+
+      reply.send({
+        data: {
+          data: flights.map((i) => ({ id: i._id, lastReceived: i.received })),
+          paging: {
+            nextCursor: null,
+            total: totalNumFlights.length,
+            results: flights.length,
+          },
+        },
       });
-      return;
     }
-
-    const totalNumFlights = await logsCollection.distinct("flightId");
-
-    const flights = await logsCollection
-      .aggregate([
-        {
-          $group: {
-            _id: "$flightId",
-            received: { $max: "$received" },
-          },
-        },
-        {
-          $sort: {
-            received: -1,
-          },
-        },
-        {
-          $limit: 10,
-        },
-      ])
-      .toArray();
-
-    reply.send({
-      data: {
-        data: flights.map((i) => ({ id: i._id, lastReceived: i.received })),
-        paging: {
-          nextCursor: null,
-          total: totalNumFlights.length,
-          results: flights.length,
-        },
-      },
-    });
-  });
+  );
 
   app.post<{
     Body: { command: string };
     Params: { flightId: string };
-  }>("/api/flights/:flightId/events", async (req, reply) => {
-    try {
-      await verifyUserToken(req.cookies.auth!);
-    } catch (err) {
-      reply.status(401).send({
-        error: "Unauthorized",
+  }>(
+    "/api/flights/:flightId/events",
+    { preHandler: assertUserToken },
+    async (req, reply) => {
+      const { flightId } = req.params;
+      const { command } = req.body;
+
+      commands.addToQueue(flightId, command);
+
+      reply.send({
+        data: {
+          ok: true,
+        },
       });
-      return;
     }
-
-    const { flightId } = req.params;
-    const { command } = req.body;
-
-    commands.addToQueue(flightId, command);
-
-    reply.send({
-      data: {
-        ok: true,
-      },
-    });
-  });
+  );
 
   // this is a polling endpoint: while we don't have events, it will keep waiting
   app.get<{ Params: { flightId: string } }>(
     "/api/flights/:flightId/events",
+    { preHandler: assertFlightIdMatchesDevice },
     async (req, reply) => {
       const { flightId } = req.params;
-
-      const token = req.headers.authorization?.split(" ")[1];
-
-      if (!token) {
-        reply.status(401).send({
-          error: "Unauthorized",
-        });
-        return;
-      }
-
-      try {
-        const data = await verifyDeviceToken(token);
-
-        if (data.sub !== flightId) {
-          reply.status(403).send({
-            error: "Forbidden",
-          });
-          return;
-        }
-      } catch (err) {
-        reply.status(401).send({
-          error: "Unauthorized",
-        });
-        return;
-      }
 
       const backloggedCommands = commands.processFromQueue(flightId);
 
@@ -297,75 +259,48 @@ export async function buildFastify(): Promise<FastifyInstance> {
   app.post<{
     Body: { data: (LogDocument["data"] & Pick<LogDocument, "sent">)[] };
     Params: { flightId: string };
-  }>("/api/flights/:flightId/logs", async (req, reply) => {
-    try {
-      const { flightId } = req.params;
-
-      const token = req.headers.authorization?.split(" ")[1];
-
-      if (!token) {
-        reply.status(401).send({
-          error: "Unauthorized",
-        });
-        return;
-      }
+  }>(
+    "/api/flights/:flightId/logs",
+    { preHandler: assertFlightIdMatchesDevice },
+    async (req, reply) => {
       try {
-        const data = await verifyDeviceToken(token);
+        const { flightId } = req.params;
 
-        if (data.sub !== flightId) {
-          reply.status(403).send({
-            error: "Forbidden",
-          });
-          return;
-        }
+        const newLogs = req.body.data.map((i) => {
+          const { sent, ...data } = i;
+
+          return {
+            flightId,
+            sent,
+            received: Date.now(),
+            data,
+          };
+        });
+        await logsCollection.insertMany(newLogs);
+
+        try {
+          for (const socket of sockets) {
+            socket.emit("logs", newLogs);
+          }
+        } catch (err) {}
+
+        reply.send({
+          data: {
+            ok: true,
+          },
+        });
       } catch (err) {
-        reply.status(401).send({
-          error: "Unauthorized",
+        reply.status(500).send({
+          error: "Internal Server Error",
         });
-        return;
       }
-
-      const newLogs = req.body.data.map((i) => {
-        const { sent, ...data } = i;
-
-        return {
-          flightId,
-          sent,
-          received: Date.now(),
-          data,
-        };
-      });
-      await logsCollection.insertMany(newLogs);
-
-      try {
-        for (const socket of sockets) {
-          socket.emit("logs", newLogs);
-        }
-      } catch (err) {}
-
-      reply.send({
-        data: {
-          ok: true,
-        },
-      });
-    } catch (err) {
-      reply.status(500).send({
-        error: "Internal Server Error",
-      });
     }
-  });
+  );
 
   app.get<{ Params: { flightId: string } }>(
     "/api/flights/:flightId/logs",
+    { preHandler: assertUserToken },
     async (req, reply) => {
-      try {
-        await verifyUserToken(req.cookies.auth!);
-      } catch (err) {
-        reply.status(401).send({
-          error: "Unauthorized",
-        });
-        return;
-      }
       const { flightId } = req.params;
 
       const data = await logsCollection
