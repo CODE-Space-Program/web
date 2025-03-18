@@ -19,12 +19,12 @@ jobs:
           script: |
             source ~/.bashrc
 
-            cd /projects/space-program/frontend
-
             git pull origin main --no-rebase
 
-            ~/.bun/bin/bun install
+            cd /projects/space-program/frontend
 
-            ~/.bun/bin/bun run build
+            bun install
+
+            bun run build
 
             docker-compose up -d --build
