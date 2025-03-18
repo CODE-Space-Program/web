@@ -17,6 +17,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.REMOTE_PORT }}
           script: |
+            source ~/.bashrc
+
             cd /projects/space-program/frontend
 
             git pull origin main --no-rebase

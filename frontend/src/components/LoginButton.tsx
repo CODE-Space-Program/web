@@ -21,10 +21,7 @@ function getGoogleAuthUrl() {
 export function LoginButton() {
   return (
     <a href={getGoogleAuthUrl()} aria-label="Login with Google">
-      <img
-        src="https://developers.google.com/identity/images/btn_google_signin_light_normal_web.png"
-        alt="Sign in with Google"
-      />
+      LOGIN
     </a>
   );
 }
