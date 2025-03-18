@@ -166,7 +166,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
   });
 
   app.get("/api/logout", async (req, reply) => {
-    reply.setCookie("auth", "");
+    reply.clearCookie("auth");
     reply.redirect("/");
   });
 
