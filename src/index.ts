@@ -162,10 +162,24 @@ export async function buildFastify(): Promise<FastifyInstance> {
       secure: false, // Send only over HTTPS (set to false for local dev)
       sameSite: "strict",
     });
-    reply.redirect(`/?token=${token}`);
+    reply.redirect("/");
+  });
+
+  app.get("/api/logout", async (req, reply) => {
+    reply.setCookie("auth", "");
+    reply.redirect("/");
   });
 
   app.get("/api/flights", async (req, reply) => {
+    try {
+      await verifyUserToken(req.cookies.auth!);
+    } catch (err) {
+      reply.status(401).send({
+        error: "Unauthorized",
+      });
+      return;
+    }
+
     const totalNumFlights = await logsCollection.distinct("flightId");
 
     const flights = await logsCollection
@@ -229,6 +243,31 @@ export async function buildFastify(): Promise<FastifyInstance> {
     "/api/flights/:flightId/events",
     async (req, reply) => {
       const { flightId } = req.params;
+
+      const token = req.headers.authorization?.split(" ")[1];
+
+      if (!token) {
+        reply.status(401).send({
+          error: "Unauthorized",
+        });
+        return;
+      }
+
+      try {
+        const data = await verifyDeviceToken(token);
+
+        if (data.sub !== flightId) {
+          reply.status(403).send({
+            error: "Forbidden",
+          });
+          return;
+        }
+      } catch (err) {
+        reply.status(401).send({
+          error: "Unauthorized",
+        });
+        return;
+      }
 
       const backloggedCommands = commands.processFromQueue(flightId);
 
@@ -319,6 +358,14 @@ export async function buildFastify(): Promise<FastifyInstance> {
   app.get<{ Params: { flightId: string } }>(
     "/api/flights/:flightId/logs",
     async (req, reply) => {
+      try {
+        await verifyUserToken(req.cookies.auth!);
+      } catch (err) {
+        reply.status(401).send({
+          error: "Unauthorized",
+        });
+        return;
+      }
       const { flightId } = req.params;
 
       const data = await logsCollection
