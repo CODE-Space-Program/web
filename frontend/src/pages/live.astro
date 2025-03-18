@@ -10,7 +10,7 @@ import { FlightControls } from "../components/FlightControls";
 
 <Layout>
   <script>
-    if (document.cookie.includes("auth")) {
+    if (!document.cookie.includes("auth")) {
       window.location.href = "/";
     }
   </script>
