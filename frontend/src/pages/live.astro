@@ -3,7 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import background from "../assets/rocket.jpg";
 import { FlightControls } from "../components/FlightControls";
 
-if (!Astro.cookies.has("auth")) {
+if (typeof window !== "undefined" && document.cookie.includes("auth")) {
   return Astro.redirect("/");
 }
 
