@@ -3,10 +3,12 @@ import Layout from "../layouts/Layout.astro";
 import background from "../assets/image.png";
 import Header from "../components/Header.astro";
 import Footer from "../components/Footer.astro";
+import { LoginButton } from "../components/LoginButton.tsx";
 ---
 
 <Layout>
   <Header />
+  <LoginButton client:visible />
   <img
     src={background.src}
     alt=""

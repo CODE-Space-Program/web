@@ -4,6 +4,7 @@ import path from "path";
 import fastifyCors from "@fastify/cors";
 import fastifyHelmet from "@fastify/helmet";
 import fastifyStatic from "@fastify/static";
+import fastifyCookie from "@fastify/cookie";
 import Fastify, { type FastifyInstance } from "fastify";
 import mitt from "mitt";
 import fastifySocketIO from "fastify-socket.io";
@@ -11,7 +12,12 @@ import type { Server, Socket } from "socket.io";
 
 import { env } from "./env";
 import { logsCollection, type LogDocument } from "./db";
-import { generateDeviceToken, generateUserToken } from "./jwt";
+import {
+  generateDeviceToken,
+  generateUserToken,
+  verifyDeviceToken,
+  verifyUserToken,
+} from "./jwt";
 
 const sockets = new Set<Socket<ClientToServerEvents, ServerToClientEvents>>();
 
@@ -59,6 +65,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
     io: Server;
   };
 
+  await app.register(fastifyCookie);
   await app.register(fastifyCors, { origin: env.corsOrigins });
   await app.register(fastifyHelmet, {
     contentSecurityPolicy: {
@@ -149,6 +156,12 @@ export async function buildFastify(): Promise<FastifyInstance> {
     }
     const token = await generateUserToken(userInfo.email);
 
+    reply.setCookie("auth", token, {
+      path: "/",
+      httpOnly: false,
+      secure: false, // Send only over HTTPS (set to false for local dev)
+      sameSite: "strict",
+    });
     reply.redirect(`/?token=${token}`);
   });
 
@@ -190,6 +203,15 @@ export async function buildFastify(): Promise<FastifyInstance> {
     Body: { command: string };
     Params: { flightId: string };
   }>("/api/flights/:flightId/events", async (req, reply) => {
+    try {
+      await verifyUserToken(req.cookies.auth!);
+    } catch (err) {
+      reply.status(401).send({
+        error: "Unauthorized",
+      });
+      return;
+    }
+
     const { flightId } = req.params;
     const { command } = req.body;
 
@@ -239,6 +261,30 @@ export async function buildFastify(): Promise<FastifyInstance> {
   }>("/api/flights/:flightId/logs", async (req, reply) => {
     try {
       const { flightId } = req.params;
+
+      const token = req.headers.authorization?.split(" ")[1];
+
+      if (!token) {
+        reply.status(401).send({
+          error: "Unauthorized",
+        });
+        return;
+      }
+      try {
+        const data = await verifyDeviceToken(token);
+
+        if (data.sub !== flightId) {
+          reply.status(403).send({
+            error: "Forbidden",
+          });
+          return;
+        }
+      } catch (err) {
+        reply.status(401).send({
+          error: "Unauthorized",
+        });
+        return;
+      }
 
       const newLogs = req.body.data.map((i) => {
         const { sent, ...data } = i;
