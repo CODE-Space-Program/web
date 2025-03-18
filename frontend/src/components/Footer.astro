@@ -15,7 +15,7 @@ const isLoggedIn = Astro.cookies.has("auth");
     <a href="/imprint" aria-label="Imprint and contact info" class="social"
       >IMPRINT</a
     >
-    {isLoggedIn ? <LoginButton /> : null}
+    {isLoggedIn ? null : <LoginButton />}
   </p>
 </div>
 
