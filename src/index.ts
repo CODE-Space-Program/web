@@ -324,18 +324,14 @@ export async function buildFastify(): Promise<FastifyInstance> {
       preHandler: assertFlightIdMatchesDevice,
       schema: {
         body: {
-          type: "object",
-          required: ["data"],
-          properties: {
-            type: "array",
-            items: {
-              type: "object",
-              required: ["sent"],
-              properties: {
-                sent: { type: "integer" },
-              },
-              additionalProperties: true,
+          type: "array",
+          items: {
+            type: "object",
+            required: ["sent"],
+            properties: {
+              sent: { type: "integer" },
             },
+            additionalProperties: true,
           },
         },
       },
