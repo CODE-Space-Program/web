@@ -316,7 +316,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
   );
 
   app.post<{
-    Body: { data: (LogDocument["data"] & Pick<LogDocument, "sent">)[] };
+    Body: (LogDocument["data"] & Pick<LogDocument, "sent">)[];
     Params: { flightId: string };
   }>(
     "/api/flights/:flightId/logs",
@@ -340,7 +340,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
       try {
         const { flightId } = req.params;
 
-        const newLogs = req.body.data.map((i) => {
+        const newLogs = req.body.map((i) => {
           const { sent, ...data } = i;
 
           return {
