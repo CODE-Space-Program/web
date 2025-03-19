@@ -2,10 +2,7 @@
 import Layout from "../layouts/Layout.astro";
 import background from "../assets/rocket.jpg";
 import { FlightControls } from "../components/FlightControls";
-
-// export const prerender = false;
-
-// const isLoggedIn = Astro.cookies.has("token");
+import Header from "../components/Header.astro";
 ---
 
 <Layout>
@@ -14,23 +11,8 @@ import { FlightControls } from "../components/FlightControls";
       window.location.href = "/";
     }
   </script>
-  <img src="/logo.svg" alt="Astro logo" width="200" />
+  <Header />
   <img src={background.src} alt="Rocket" fetchpriority="high" id="background" />
-
-  <!-- <div style="width: 100vw; height: 40vh">
-    {
-      isLoggedIn ? (
-        <Charts client:visible />
-      ) : (
-        <p>
-          Please log in to see the chart.{" "}
-          <a href="/login" aria-label="Login page">
-            Login
-          </a>
-        </p>
-      )
-    }
-  </div> -->
 
   <FlightControls client:visible />
 </Layout>
@@ -42,35 +24,6 @@ import { FlightControls } from "../components/FlightControls";
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: -1;
-  }
-
-  .inner-left-bottom {
-    max-width: 420px;
-
-    width: 50%;
-
-    position: absolute;
-
-    top: 50%;
-    left: 50px;
-  }
-
-  h1 {
-    max-width: 90%;
-    font-size: 48px;
-    line-height: 48px;
-
-    margin: 0;
-
-    text-transform: uppercase;
-  }
-  p {
-    margin-top: 20px;
-    margin-bottom: 15px;
-
-    line-height: 1.6;
-
-    font-size: 1rem;
+    z-index: 0;
   }
 </style>
