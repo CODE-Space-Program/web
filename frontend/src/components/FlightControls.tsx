@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { io, type Socket } from "socket.io-client";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
@@ -97,6 +97,30 @@ const useCurrentFlight = () =>
 
 export interface FlightControlProps {}
 
+const useTakeoffCommand = (flightId?: string) =>
+  useMutation({
+    mutationFn: async () => {
+      if (!flightId) return;
+
+      const takeoffRes = await fetch(`/api/flights/${flightId}/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sent: Date.now(),
+          command: "start",
+        }),
+      });
+      if (!takeoffRes.ok) {
+        if (takeoffRes.status === 504) {
+          throw new Error("Command not received by device");
+        }
+        throw new Error("Status " + takeoffRes.status);
+      }
+    },
+  });
+
 export const FlightControlss: React.FC<FlightControlProps> = () => {
   // rerender timestamp every second
   useCurrentTime();
@@ -104,6 +128,12 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
   const { data, isLoading, error } = useCurrentFlight();
 
   const { logs, lastLogTimestamp, isInProgress } = useLogs(data?.id);
+
+  const {
+    mutate: sendTakeoffCommand,
+    isPending,
+    failureReason,
+  } = useTakeoffCommand(data?.id);
 
   const onTakeoffClick = async () => {
     if (!data?.id) return;
@@ -116,20 +146,7 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
       alert("Invalid input, aborting takeoff.");
       return;
     }
-
-    const takeOffRes = await fetch(`/api/flights/${data?.id}/events`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        sent: Date.now(),
-        command: "start",
-      }),
-    });
-    if (!takeOffRes.ok) {
-      alert("Error: Failed to send takeoff command");
-    }
+    sendTakeoffCommand();
   };
 
   if (isLoading) {
@@ -185,9 +202,18 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
         <p style={{ marginBottom: 0 }}>Flight ID: {data.id}</p>
         <p style={{ marginTop: 0 }}>{lastUpdateString}</p>
         <div style={{ display: "flex", gap: "1rem", marginTop: "1rem" }}>
-          <button onClick={onTakeoffClick} className="button">
-            Takeoff
+          <button
+            onClick={onTakeoffClick}
+            className="button"
+            disabled={isPending}
+          >
+            {isPending ? "Sending..." : "Takeoff"}
           </button>
+          {failureReason ? (
+            <p style={{ color: "red" }}>
+              Takeoff failed: {failureReason.message}
+            </p>
+          ) : null}
           <a
             target="_blank"
             href={`/api/flights/${data.id}/logs`}

@@ -20,6 +20,7 @@ const sockets = new Set<Socket<ClientToServerEvents, ServerToClientEvents>>();
 class Commands {
   public events = mitt<{
     commandsAdded: { flightId: string; command: string }[];
+    commandsReceived: { flightId: string; command: string }[];
   }>();
 
   private commands: Record<
@@ -35,10 +36,20 @@ class Commands {
       sent: true,
     }));
 
-    return (
-      this.commands[flightId]
-        ?.filter((i) => !i.sent)
-        .map((i) => ({ command: i.command })) ?? []
+    const receivedCommands = this.commands[flightId]?.filter((i) => !i.sent);
+
+    if (receivedCommands?.length) {
+      this.events.emit(
+        "commandsReceived",
+        receivedCommands.map((i) => ({ flightId, command: i.command }))
+      );
+    }
+    return receivedCommands.map((i) => ({ command: i.command })) ?? [];
+  }
+
+  public removeFromQueue(flightId: string, command: string) {
+    this.commands[flightId] = this.commands[flightId]?.filter(
+      (i) => i.command !== command
     );
   }
 
@@ -233,6 +244,27 @@ export async function buildFastify(): Promise<FastifyInstance> {
       const { command } = req.body;
 
       commands.addToQueue(flightId, command);
+
+      const executed = await new Promise<boolean>((res) => {
+        setTimeout(() => res(false), 5000);
+
+        commands.events.on("commandsReceived", (commands) => {
+          const executedCommand = commands.find(
+            (i) => i.flightId === flightId && i.command === command
+          );
+          if (executedCommand) {
+            res(true);
+          }
+        });
+      });
+
+      if (!executed) {
+        commands.removeFromQueue(flightId, command);
+
+        reply.status(504).send({
+          error: "Command not received by device",
+        });
+      }
 
       reply.send({
         data: {
