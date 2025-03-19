@@ -44,7 +44,7 @@ class Commands {
         receivedCommands.map((i) => ({ flightId, command: i.command }))
       );
     }
-    return receivedCommands.map((i) => ({ command: i.command })) ?? [];
+    return receivedCommands?.map((i) => ({ command: i.command })) ?? [];
   }
 
   public removeFromQueue(flightId: string, command: string) {
@@ -327,16 +327,14 @@ export async function buildFastify(): Promise<FastifyInstance> {
           type: "object",
           required: ["data"],
           properties: {
-            data: {
-              type: "array",
-              items: {
-                type: "object",
-                required: ["sent"],
-                properties: {
-                  sent: { type: "integer" },
-                },
-                additionalProperties: true,
+            type: "array",
+            items: {
+              type: "object",
+              required: ["sent"],
+              properties: {
+                sent: { type: "integer" },
               },
+              additionalProperties: true,
             },
           },
         },
