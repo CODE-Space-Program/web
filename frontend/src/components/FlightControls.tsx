@@ -131,8 +131,8 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
 
   const {
     mutate: sendTakeoffCommand,
-    isPending,
-    failureReason,
+    isPending: isTakeoffPending,
+    failureReason: takeoffFailureReason,
   } = useTakeoffCommand(data?.id);
 
   const onTakeoffClick = async () => {
@@ -174,16 +174,6 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
     );
   }
 
-  function getGoogleAuthUrl() {
-    const clientId =
-      "362081384026-k7jclf68lclap0am9qocuoojons27j1d.apps.googleusercontent.com";
-    const redirectUri = getQualifiedUrl() + "/api/auth/google/callback";
-
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code&scope=openid%20email%20profile&access_type=offline&prompt=consent`;
-
-    return googleAuthUrl;
-  }
-
   const lastUpdateString = lastLogTimestamp
     ? isInProgress
       ? "Receiving data"
@@ -205,15 +195,10 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
           <button
             onClick={onTakeoffClick}
             className="button"
-            disabled={isPending}
+            disabled={isTakeoffPending}
           >
-            {isPending ? "Sending..." : "Takeoff"}
+            {isTakeoffPending ? "Sending..." : "Takeoff"}
           </button>
-          {failureReason ? (
-            <p style={{ color: "red" }}>
-              Takeoff failed: {failureReason.message}
-            </p>
-          ) : null}
           <a
             target="_blank"
             href={`/api/flights/${data.id}/logs`}
@@ -227,6 +212,9 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
             size="54px"
           />
         </div>
+        {takeoffFailureReason && (
+          <p>Takeoff failed: {takeoffFailureReason.message}</p>
+        )}
       </div>
       {logs.length > 1 ? (
         <div

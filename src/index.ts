@@ -232,9 +232,9 @@ export async function buildFastify(): Promise<FastifyInstance> {
       schema: {
         body: {
           type: "object",
-          required: ["data"],
           properties: {
             command: { type: "string" },
+            sent: { type: "integer" },
           },
         },
       },
