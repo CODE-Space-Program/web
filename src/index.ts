@@ -90,16 +90,23 @@ export async function buildFastify(): Promise<FastifyInstance> {
   });
 
   app.post("/api/flights", async (req, reply) => {
-    const flightId = crypto.randomUUID();
+    try {
+      const flightId = crypto.randomUUID();
 
-    const token = await generateDeviceToken(flightId);
+      const token = await generateDeviceToken(flightId);
 
-    reply.send({
-      data: {
-        flightId,
-        token,
-      },
-    });
+      reply.send({
+        data: {
+          flightId,
+          token,
+        },
+      });
+    } catch (err) {
+      console.error(`failed to POST /api/flights: ${err}`);
+      reply.status(500).send({
+        error: "Internal Server Error",
+      });
+    }
   });
 
   app.get<{
@@ -209,7 +216,18 @@ export async function buildFastify(): Promise<FastifyInstance> {
     Params: { flightId: string };
   }>(
     "/api/flights/:flightId/events",
-    { preHandler: assertUserToken },
+    {
+      preHandler: assertUserToken,
+      schema: {
+        body: {
+          type: "object",
+          required: ["data"],
+          properties: {
+            command: { type: "string" },
+          },
+        },
+      },
+    },
     async (req, reply) => {
       const { flightId } = req.params;
       const { command } = req.body;
@@ -229,30 +247,39 @@ export async function buildFastify(): Promise<FastifyInstance> {
     "/api/flights/:flightId/events",
     { preHandler: assertFlightIdMatchesDevice },
     async (req, reply) => {
-      const { flightId } = req.params;
+      try {
+        const { flightId } = req.params;
 
-      const backloggedCommands = commands.processFromQueue(flightId);
+        const backloggedCommands = commands.processFromQueue(flightId);
 
-      if (backloggedCommands.length) {
+        if (backloggedCommands.length) {
+          reply.send({
+            data: backloggedCommands,
+          });
+          return;
+        }
+
+        const liveCommands = await new Promise<{ command: string }[]>((res) => {
+          setTimeout(() => res([]), 10000);
+
+          commands.events.on("commandsAdded", (commands) => {
+            const dinger = commands.filter((i) => i.flightId === flightId);
+            if (dinger.length) {
+              res(dinger.map((i) => ({ command: i.command })));
+            }
+          });
+        });
         reply.send({
-          data: backloggedCommands,
+          data: liveCommands,
         });
-        return;
+      } catch (err) {
+        console.error(
+          `failed to GET /api/flights/${req.params.flightId}/events: ${err}`
+        );
+        reply.status(500).send({
+          error: "Internal Server Error",
+        });
       }
-
-      const liveCommands = await new Promise<{ command: string }[]>((res) => {
-        setTimeout(() => res([]), 10000);
-
-        commands.events.on("commandsAdded", (commands) => {
-          const dinger = commands.filter((i) => i.flightId === flightId);
-          if (dinger.length) {
-            res(dinger.map((i) => ({ command: i.command })));
-          }
-        });
-      });
-      reply.send({
-        data: liveCommands,
-      });
     }
   );
 
@@ -261,7 +288,28 @@ export async function buildFastify(): Promise<FastifyInstance> {
     Params: { flightId: string };
   }>(
     "/api/flights/:flightId/logs",
-    { preHandler: assertFlightIdMatchesDevice },
+    {
+      preHandler: assertFlightIdMatchesDevice,
+      schema: {
+        body: {
+          type: "object",
+          required: ["data"],
+          properties: {
+            data: {
+              type: "array",
+              items: {
+                type: "object",
+                required: ["sent"],
+                properties: {
+                  sent: { type: "integer" },
+                },
+                additionalProperties: true,
+              },
+            },
+          },
+        },
+      },
+    },
     async (req, reply) => {
       try {
         const { flightId } = req.params;
@@ -290,6 +338,9 @@ export async function buildFastify(): Promise<FastifyInstance> {
           },
         });
       } catch (err) {
+        console.error(
+          `failed to POST /api/flights/${req.params.flightId}/logs: ${err}`
+        );
         reply.status(500).send({
           error: "Internal Server Error",
         });
