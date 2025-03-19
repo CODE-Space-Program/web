@@ -92,7 +92,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
   app.post("/api/flights", async (req, reply) => {
     const flightId = crypto.randomUUID();
 
-    const token = generateDeviceToken(flightId);
+    const token = await generateDeviceToken(flightId);
 
     reply.send({
       data: {

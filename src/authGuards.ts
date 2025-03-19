@@ -1,6 +1,6 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 
-import { verifyDeviceToken } from "./jwt";
+import { verifyDeviceToken, verifyUserToken } from "./jwt";
 
 function getToken(request: FastifyRequest): string | undefined {
   return (request.cookies.auth || request.headers.authorization)?.replace(
@@ -46,7 +46,7 @@ export async function assertUserToken(
   }
 
   try {
-    await verifyDeviceToken(token);
+    await verifyUserToken(token);
   } catch (err) {
     return reply.status(401).send({ error: "Unauthorized" });
   }
