@@ -3,6 +3,7 @@ import Layout from "../layouts/Layout.astro";
 import background from "../assets/rocket.jpg";
 import { FlightControls } from "../components/FlightControls";
 import Header from "../components/Header.astro";
+import { Image } from "astro:assets";
 ---
 
 <Layout>
@@ -12,7 +13,8 @@ import Header from "../components/Header.astro";
     }
   </script>
   <Header />
-  <img src={background.src} alt="Rocket" fetchpriority="high" id="background" />
+
+  <img src={background.src} alt="" fetchpriority="high" id="background" />
 
   <FlightControls client:visible />
 </Layout>
