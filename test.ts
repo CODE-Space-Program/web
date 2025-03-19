@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:4321";
+const BASE_URL = "https://spaceprogram.bolls.dev";
 
 const flightRes = await fetch(`${BASE_URL}/api/flights`, {
   method: "POST",
@@ -17,23 +17,19 @@ const res = await fetch(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${flightData.data.token}`,
     },
-    body: JSON.stringify({
-      sent: Date.now(),
-      gyro: {
-        x: 0,
-        y: 0,
-        z: 0,
+    body: JSON.stringify([
+      {
+        sent: Date.now(),
+        // this can have any arbitrary fields
       },
-      acc: {
-        x: 0,
-        y: 0,
-        z: 0,
+      {
+        sent: Date.now(),
+        foo: { gyro_roll: 1 },
+        // this can have any arbitrary fields
       },
-      pressure: 0,
-      altitude: 0,
-      temperature: 0,
-    }),
+    ]),
   }
 );
 const data = await res.json();

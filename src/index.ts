@@ -6,7 +6,6 @@ import fastifyHelmet from "@fastify/helmet";
 import fastifyStatic from "@fastify/static";
 import fastifyCookie from "@fastify/cookie";
 import Fastify, { type FastifyInstance } from "fastify";
-import mitt from "mitt";
 import fastifySocketIO from "fastify-socket.io";
 import type { Server, Socket } from "socket.io";
 
@@ -14,58 +13,9 @@ import { env } from "./env";
 import { logsCollection, type LogDocument } from "./db";
 import { generateDeviceToken, generateUserToken } from "./jwt";
 import { assertFlightIdMatchesDevice, assertUserToken } from "./authGuards";
+import { commands } from "./commands";
 
 const sockets = new Set<Socket<ClientToServerEvents, ServerToClientEvents>>();
-
-class Commands {
-  public events = mitt<{
-    commandsAdded: { flightId: string; command: string }[];
-    commandsReceived: { flightId: string; command: string }[];
-  }>();
-
-  private commands: Record<
-    string,
-    // completed is currently unused, because the rocket doesn't give feedback on which commands were completed
-    { command: string; sent: boolean; completed: boolean }[]
-  > = {};
-  constructor() {}
-
-  public processFromQueue(flightId: string) {
-    this.commands[flightId] = this.commands[flightId]?.map((i) => ({
-      ...i,
-      sent: true,
-    }));
-
-    const receivedCommands = this.commands[flightId]?.filter((i) => !i.sent);
-
-    if (receivedCommands?.length) {
-      this.events.emit(
-        "commandsReceived",
-        receivedCommands.map((i) => ({ flightId, command: i.command }))
-      );
-    }
-    return receivedCommands?.map((i) => ({ command: i.command })) ?? [];
-  }
-
-  public removeFromQueue(flightId: string, command: string) {
-    this.commands[flightId] = this.commands[flightId]?.filter(
-      (i) => i.command !== command
-    );
-  }
-
-  public addToQueue(flightId: string, command: string) {
-    if (!this.commands[flightId]) {
-      this.commands[flightId] = [];
-    }
-    this.commands[flightId].push({
-      command,
-      sent: false,
-      completed: false,
-    });
-    this.events.emit("commandsAdded", [{ flightId, command }]);
-  }
-}
-const commands = new Commands();
 
 export async function buildFastify(): Promise<FastifyInstance> {
   const app = Fastify({ logger: true }) as unknown as FastifyInstance & {
