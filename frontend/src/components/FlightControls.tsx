@@ -97,28 +97,35 @@ const useCurrentFlight = () =>
 
 export interface FlightControlProps {}
 
+async function sendCommand(flightId?: string, command: string) {
+  if (!flightId) return;
+
+  const takeoffRes = await fetch(`/api/flights/${flightId}/events`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sent: Date.now(),
+      command,
+    }),
+  });
+  if (!takeoffRes.ok) {
+    if (takeoffRes.status === 504) {
+      throw new Error("Command not received by device");
+    }
+    throw new Error("Status " + takeoffRes.status);
+  }
+}
+
 const useTakeoffCommand = (flightId?: string) =>
   useMutation({
-    mutationFn: async () => {
-      if (!flightId) return;
+    mutationFn: () => sendCommand(flightId, "start"),
+  });
 
-      const takeoffRes = await fetch(`/api/flights/${flightId}/events`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          sent: Date.now(),
-          command: "start",
-        }),
-      });
-      if (!takeoffRes.ok) {
-        if (takeoffRes.status === 504) {
-          throw new Error("Command not received by device");
-        }
-        throw new Error("Status " + takeoffRes.status);
-      }
-    },
+const useTvcTestCommand = (flightId?: string) =>
+  useMutation({
+    mutationFn: () => sendCommand(flightId, "test_tvc"),
   });
 
 export const FlightControlss: React.FC<FlightControlProps> = () => {
@@ -134,6 +141,18 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
     isPending: isTakeoffPending,
     failureReason: takeoffFailureReason,
   } = useTakeoffCommand(data?.id);
+
+  const {
+    mutate: sendTvcTestCommand,
+    isPending: isTvcTestPending,
+    failureReason: tvcTestFailureReason,
+  } = useTvcTestCommand(data?.id);
+
+  const onTvcTestClick = async () => {
+    if (!data?.id) return;
+
+    sendTvcTestCommand();
+  };
 
   const onTakeoffClick = async () => {
     if (!data?.id) return;
@@ -199,6 +218,13 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
           >
             {isTakeoffPending ? "Sending..." : "Takeoff"}
           </button>
+          <button
+            onClick={onTvcTestClick}
+            className="button"
+            disabled={isTvcTestPending}
+          >
+            {isTvcTestPending ? "Sending..." : "Test TVC"}
+          </button>
           <a
             target="_blank"
             href={`/api/flights/${data.id}/logs`}
@@ -214,6 +240,9 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
         </div>
         {takeoffFailureReason && (
           <p>Takeoff failed: {takeoffFailureReason.message}</p>
+        )}
+        {tvcTestFailureReason && (
+          <p>Test TVC failed: {tvcTestFailureReason.message}</p>
         )}
       </div>
       {logs.length > 1 ? (
