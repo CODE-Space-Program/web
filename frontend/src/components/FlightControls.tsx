@@ -97,7 +97,11 @@ const useCurrentFlight = () =>
 
 export interface FlightControlProps {}
 
-async function sendCommand(flightId?: string, command: string) {
+async function sendCommand(
+  flightId: string | undefined,
+  command: string,
+  args?: unknown
+) {
   if (!flightId) return;
 
   const takeoffRes = await fetch(`/api/flights/${flightId}/events`, {
@@ -108,6 +112,7 @@ async function sendCommand(flightId?: string, command: string) {
     body: JSON.stringify({
       sent: Date.now(),
       command,
+      args,
     }),
   });
   if (!takeoffRes.ok) {
@@ -124,8 +129,12 @@ const useTakeoffCommand = (flightId?: string) =>
   });
 
 const useTvcTestCommand = (flightId?: string) =>
-  useMutation({
-    mutationFn: () => sendCommand(flightId, "test_tvc"),
+  useMutation<unknown, unknown, { maxDegrees: number; stepDegrees: number }>({
+    mutationFn: (data) =>
+      sendCommand(flightId, "test_tvc", {
+        maxDegrees: data.maxDegrees,
+        stepDegrees: data.stepDegrees,
+      }),
   });
 
 export const FlightControlss: React.FC<FlightControlProps> = () => {
@@ -151,7 +160,21 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
   const onTvcTestClick = async () => {
     if (!data?.id) return;
 
-    sendTvcTestCommand();
+    const maxDegrees = prompt("Please enter max degrees:");
+    if (!maxDegrees) return;
+
+    const stepDegrees = prompt("Please enter step degrees:");
+    if (!stepDegrees) return;
+
+    try {
+      sendTvcTestCommand({
+        maxDegrees: parseFloat(maxDegrees),
+        stepDegrees: parseFloat(stepDegrees),
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send command: Failed to parse input parameters");
+    }
   };
 
   const onTakeoffClick = async () => {
