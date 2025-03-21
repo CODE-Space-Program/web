@@ -173,7 +173,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
   );
 
   app.post<{
-    Body: { command: string };
+    Body: { command: string; sent: number; args: unknown };
     Params: { flightId: string };
   }>(
     "/api/flights/:flightId/events",
@@ -184,6 +184,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
           type: "object",
           properties: {
             command: { type: "string" },
+            args: { type: "object" },
             sent: { type: "integer" },
           },
         },
@@ -191,9 +192,9 @@ export async function buildFastify(): Promise<FastifyInstance> {
     },
     async (req, reply) => {
       const { flightId } = req.params;
-      const { command } = req.body;
+      const { command, args } = req.body;
 
-      commands.addToQueue(flightId, command);
+      commands.addToQueue(flightId, command, args);
 
       const executed = await new Promise<boolean>((res) => {
         setTimeout(() => res(false), 5000);
@@ -241,13 +242,15 @@ export async function buildFastify(): Promise<FastifyInstance> {
           return;
         }
 
-        const liveCommands = await new Promise<{ command: string }[]>((res) => {
+        const liveCommands = await new Promise<
+          { command: string; args?: unknown }[]
+        >((res) => {
           setTimeout(() => res([]), 10000);
 
           commands.events.on("commandsAdded", (commands) => {
             const dinger = commands.filter((i) => i.flightId === flightId);
             if (dinger.length) {
-              res(dinger.map((i) => ({ command: i.command })));
+              res(dinger.map((i) => ({ command: i.command, args: i.args })));
             }
           });
         });

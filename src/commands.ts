@@ -5,14 +5,14 @@ import mitt from "mitt";
  */
 class Commands {
   public events = mitt<{
-    commandsAdded: { flightId: string; command: string }[];
-    commandsReceived: { flightId: string; command: string }[];
+    commandsAdded: { flightId: string; command: string; args?: unknown }[];
+    commandsReceived: { flightId: string; command: string; args?: unknown }[];
   }>();
 
   private commands: Record<
     string,
     // completed is currently unused, because the rocket doesn't give feedback on which commands were completed
-    { command: string; sent: boolean; completed: boolean }[]
+    { command: string; args?: unknown; sent: boolean; completed: boolean }[]
   > = {};
   constructor() {}
 
@@ -39,12 +39,13 @@ class Commands {
     );
   }
 
-  public addToQueue(flightId: string, command: string) {
+  public addToQueue(flightId: string, command: string, args?: unknown) {
     if (!this.commands[flightId]) {
       this.commands[flightId] = [];
     }
     this.commands[flightId].push({
       command,
+      args,
       sent: false,
       completed: false,
     });
