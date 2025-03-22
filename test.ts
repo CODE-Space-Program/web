@@ -34,4 +34,33 @@ const res = await fetch(
 );
 const data = await res.json();
 
-console.log(data);
+setTimeout(() => {
+  fetch(`${BASE_URL}/api/flights/${flightData.data.flightId}/events`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJsaW51cy5ib2xsc0Bjb2RlLmJlcmxpbiIsInJvbGUiOiJ1c2VyIiwiaWF0IjoxNzQyMzQxMTY1fQ.IvNjuKapCP3r07MWUDFDTMZiyr3gwVGcPb5vemdMXrw`,
+    },
+    body: JSON.stringify({
+      command: "test_tvc",
+      args: {
+        maxDegrees: 10,
+        stepDegrees: 10,
+      },
+      sent: Date.now(),
+    }),
+  });
+}, 1000);
+
+const res1 = await fetch(
+  `${BASE_URL}/api/flights/${flightData.data.flightId}/events`,
+  {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${flightData.data.token}`,
+    },
+  }
+);
+const data1 = await res1.json();
+
+console.log(data, data1);

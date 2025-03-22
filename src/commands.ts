@@ -17,12 +17,12 @@ class Commands {
   constructor() {}
 
   public processFromQueue(flightId: string) {
+    const receivedCommands = this.commands[flightId]?.filter((i) => !i.sent);
+
     this.commands[flightId] = this.commands[flightId]?.map((i) => ({
       ...i,
       sent: true,
     }));
-
-    const receivedCommands = this.commands[flightId]?.filter((i) => !i.sent);
 
     if (receivedCommands?.length) {
       this.events.emit(

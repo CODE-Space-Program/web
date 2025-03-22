@@ -129,12 +129,17 @@ const useTakeoffCommand = (flightId?: string) =>
   });
 
 const useTvcTestCommand = (flightId?: string) =>
-  useMutation<unknown, unknown, { maxDegrees: number; stepDegrees: number }>({
+  useMutation<unknown, Error, { maxDegrees: number; stepDegrees: number }>({
     mutationFn: (data) =>
       sendCommand(flightId, "test_tvc", {
         maxDegrees: data.maxDegrees,
         stepDegrees: data.stepDegrees,
       }),
+  });
+
+const useZeroTvcCommand = (flightId?: string) =>
+  useMutation({
+    mutationFn: () => sendCommand(flightId, "zero_servos"),
   });
 
 export const FlightControlss: React.FC<FlightControlProps> = () => {
@@ -156,6 +161,12 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
     isPending: isTvcTestPending,
     failureReason: tvcTestFailureReason,
   } = useTvcTestCommand(data?.id);
+
+  const {
+    mutate: sendZeroTvcCommand,
+    isPending: isZeroTvcPending,
+    failureReason: zeroTvcFailureReason,
+  } = useZeroTvcCommand(data?.id);
 
   const onTvcTestClick = async () => {
     if (!data?.id) return;
@@ -248,6 +259,13 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
           >
             {isTvcTestPending ? "Sending..." : "Test TVC"}
           </button>
+          <button
+            onClick={() => sendZeroTvcCommand()}
+            className="button"
+            disabled={isZeroTvcPending}
+          >
+            {isZeroTvcPending ? "Sending..." : "Zero TVC"}
+          </button>
           <a
             target="_blank"
             href={`/api/flights/${data.id}/logs`}
@@ -266,6 +284,9 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
         )}
         {tvcTestFailureReason && (
           <p>Test TVC failed: {tvcTestFailureReason.message}</p>
+        )}
+        {zeroTvcFailureReason && (
+          <p>Test TVC failed: {zeroTvcFailureReason.message}</p>
         )}
       </div>
       {logs.length > 1 ? (
