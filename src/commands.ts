@@ -27,10 +27,16 @@ class Commands {
     if (receivedCommands?.length) {
       this.events.emit(
         "commandsReceived",
-        receivedCommands.map((i) => ({ flightId, command: i.command }))
+        receivedCommands.map((i) => ({
+          flightId,
+          command: i.command,
+          args: i.args,
+        }))
       );
     }
-    return receivedCommands?.map((i) => ({ command: i.command })) ?? [];
+    return (
+      receivedCommands?.map((i) => ({ command: i.command, args: i.args })) ?? []
+    );
   }
 
   public removeFromQueue(flightId: string, command: string) {
@@ -49,7 +55,7 @@ class Commands {
       sent: false,
       completed: false,
     });
-    this.events.emit("commandsAdded", [{ flightId, command }]);
+    this.events.emit("commandsAdded", [{ flightId, command, args }]);
   }
 }
 export const commands = new Commands();
