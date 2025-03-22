@@ -28,4 +28,17 @@ import { Image } from "astro:assets";
     height: 100%;
     z-index: 0;
   }
+
+  :global(.datatable th:nth-child(2)) {
+    text-align: right;
+  }
+  :global(.datatable th:not(:first-child)) {
+    padding-left: 2rem;
+  }
+  :global(.datatable th:not(:last-child)) {
+    padding-right: 2rem;
+  }
+  :global(.datatable th) {
+    white-space: nowrap;
+  }
 </style>

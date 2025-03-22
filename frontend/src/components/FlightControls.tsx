@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, type ReactNode } from "react";
 import { io, type Socket } from "socket.io-client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
@@ -13,6 +13,9 @@ import type {
 import { useInterval } from "./useInterval";
 import ArtificialHorizon from "./ArtificialHorizon";
 import Chart from "./Chart";
+
+const display = (value: unknown): ReactNode =>
+  value == null ? "N/A" : (value as ReactNode);
 
 dayjs.extend(relativeTime);
 
@@ -235,6 +238,8 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
 
   const startTime = logs[0]?.sent;
 
+  const currentLog = logs[logs.length - 1]?.data;
+
   return (
     <>
       {/* <a href={getGoogleAuthUrl()} aria-label="Login with Google">
@@ -289,6 +294,59 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
           <p>Test TVC failed: {zeroTvcFailureReason.message}</p>
         )}
       </div>
+      {logs.length > 1 ? (
+        <table
+          className="datatable"
+          style={{
+            position: "absolute",
+            top: "10%",
+            right: "50px",
+            borderCollapse: "collapse",
+            borderSpacing: 0,
+            maxWidth: "420px",
+            textAlign: "left",
+
+            minWidth: "300px",
+          }}
+        >
+          <tr>
+            <th>Pitch</th>
+            <th>{display(currentLog?.pitch)} °</th>
+          </tr>
+          <tr>
+            <th>Yaw</th>
+            <th>{display(currentLog?.yaw)} °</th>
+          </tr>
+          <tr>
+            <th>Roll</th>
+            {/* @ts-expect-error */}
+            <th>{display(currentLog?.roll)} °</th>
+          </tr>
+          <tr>
+            <th>Pitch Servo</th>
+            {/* @ts-expect-error */}
+            <th>{display(currentLog?.nominalPitchServoDegrees)} °</th>
+          </tr>
+          <tr>
+            <th>Yaw Servo</th>
+            {/* @ts-expect-error */}
+            <th>{display(currentLog?.nominalYawServoDegrees)} °</th>
+          </tr>
+          <tr>
+            <th>Speed</th>
+            {/* @ts-expect-error */}
+            <th>{display(currentLog?.velocity)} m/s</th>
+          </tr>
+          <tr>
+            <th>Temperature</th>
+            <th>{display(currentLog?.temperature)} °C</th>
+          </tr>
+          <tr>
+            <th>Altitude</th>
+            <th>{display(currentLog?.altitude)} m</th>
+          </tr>
+        </table>
+      ) : null}
       {logs.length > 1 ? (
         <div
           style={{
