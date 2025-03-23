@@ -350,26 +350,22 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
             </tr>
             <tr>
               <th>Roll</th>
-              {/* @ts-expect-error */}
               <th>{display(currentLog?.roll?.toFixed(1))} °</th>
             </tr>
             <tr>
               <th>Pitch Servo</th>
               <th>
-                {/* @ts-expect-error */}
                 {display(currentLog?.nominalPitchServoDegrees?.toFixed(1))} °
               </th>
             </tr>
             <tr>
               <th>Yaw Servo</th>
               <th>
-                {/* @ts-expect-error */}
                 {display(currentLog?.nominalYawServoDegrees?.toFixed(1))} °
               </th>
             </tr>
             <tr>
               <th>Speed</th>
-              {/* @ts-expect-error */}
               <th>{display(currentLog?.velocity?.toFixed(1))} m/s</th>
             </tr>
             <tr>

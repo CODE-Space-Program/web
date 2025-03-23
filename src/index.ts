@@ -145,12 +145,16 @@ export async function buildFastify(): Promise<FastifyInstance> {
           {
             $group: {
               _id: "$flightId",
-              received: { $max: "$received" },
+              firstReceived: { $min: "$received" },
+              lastReceived: { $max: "$received" },
+              lastKnownState: {
+                $last: "$data.state",
+              },
             },
           },
           {
             $sort: {
-              received: -1,
+              lastReceived: -1,
             },
           },
           {
@@ -161,7 +165,12 @@ export async function buildFastify(): Promise<FastifyInstance> {
 
       reply.send({
         data: {
-          data: flights.map((i) => ({ id: i._id, lastReceived: i.received })),
+          data: flights.map((i) => ({
+            id: i._id,
+            firstReceived: i.firstReceived,
+            lastReceived: i.lastReceived,
+            duration: i.lastReceived - i.firstReceived,
+          })),
           paging: {
             nextCursor: null,
             total: totalNumFlights.length,

@@ -18,9 +18,17 @@ export interface LogDocument {
     gyro_z: number;
     pitch: number;
     yaw: number;
+    roll: number;
     pressure: number;
     altitude: number;
     temperature: number;
+
+    nominalPitchServoDegrees: number;
+    nominalYawServoDegrees: number;
+
+    velocity: number;
+
+    state: string;
   };
 }
 export const logsCollection = db.collection<LogDocument>("logs");
