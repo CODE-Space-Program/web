@@ -143,6 +143,9 @@ export async function buildFastify(): Promise<FastifyInstance> {
       const flights = await logsCollection
         .aggregate([
           {
+            $sort: { received: 1 }, // ensure the $last for lastKnownState actually takes the latest by `received` and not some random document
+          },
+          {
             $group: {
               _id: "$flightId",
               firstReceived: { $min: "$received" },
@@ -170,6 +173,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
             firstReceived: i.firstReceived,
             lastReceived: i.lastReceived,
             duration: i.lastReceived - i.firstReceived,
+            lastKnownState: i.lastKnownState,
           })),
           paging: {
             nextCursor: null,
