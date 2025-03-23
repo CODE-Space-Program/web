@@ -162,11 +162,16 @@ const useTakeoffCommand = (flightId?: string) =>
   });
 
 const useTvcTestCommand = (flightId?: string) =>
-  useMutation<unknown, Error, { maxDegrees: number; stepDegrees: number }>({
+  useMutation<
+    unknown,
+    Error,
+    { maxDegrees: number; stepDegrees: number; duration: number }
+  >({
     mutationFn: (data) =>
       sendCommand(flightId, "test_tvc", {
         maxDegrees: data.maxDegrees,
         stepDegrees: data.stepDegrees,
+        duration: data.duration,
       }),
   });
 
@@ -210,10 +215,14 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
     const stepDegrees = prompt("Please enter step degrees:");
     if (!stepDegrees) return;
 
+    const durationSeconds = prompt("Please enter duration in seconds:");
+    if (!durationSeconds) return;
+
     try {
       sendTvcTestCommand({
         maxDegrees: parseFloat(maxDegrees),
         stepDegrees: parseFloat(stepDegrees),
+        duration: parseInt(durationSeconds) * 1000,
       });
     } catch (err) {
       console.error(err);
