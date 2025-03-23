@@ -7,11 +7,19 @@ import {
   LinearScale,
   Title,
   CategoryScale,
+  Filler,
   type ChartOptions,
   type ChartData,
 } from "chart.js";
 
-ChartJS.register(LineElement, PointElement, LinearScale, Title, CategoryScale);
+ChartJS.register(
+  LineElement,
+  PointElement,
+  LinearScale,
+  CategoryScale,
+  Title,
+  Filler
+);
 
 export interface ChartProps {
   lookbackMs?: number;
@@ -32,7 +40,8 @@ const Chart: React.FC<ChartProps> = ({ lookbackMs, data, xAxis, yAxis }) => {
       {
         data: slicedData.map((d) => d.value),
         borderColor: "rgba(255, 255, 255, 0.8)",
-        backgroundColor: "white",
+        backgroundColor: "rgba(255, 255, 255, 0.2)",
+        pointBackgroundColor: "white",
         fill: true,
         tension: 0.4, // Smooth curve
       },
