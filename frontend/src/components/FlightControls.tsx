@@ -54,7 +54,7 @@ export async function getSocket(): Promise<
   Socket<ServerToClientEvents, ClientToServerEvents>
 > {
   const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
-    getQualifiedUrl(),
+    baseUrl,
     {
       transports: ["websocket"],
     }
@@ -339,42 +339,48 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
             minWidth: "300px",
           }}
         >
-          <tr>
-            <th>Pitch</th>
-            <th>{display(currentLog?.pitch)} °</th>
-          </tr>
-          <tr>
-            <th>Yaw</th>
-            <th>{display(currentLog?.yaw)} °</th>
-          </tr>
-          <tr>
-            <th>Roll</th>
-            {/* @ts-expect-error */}
-            <th>{display(currentLog?.roll)} °</th>
-          </tr>
-          <tr>
-            <th>Pitch Servo</th>
-            {/* @ts-expect-error */}
-            <th>{display(currentLog?.nominalPitchServoDegrees)} °</th>
-          </tr>
-          <tr>
-            <th>Yaw Servo</th>
-            {/* @ts-expect-error */}
-            <th>{display(currentLog?.nominalYawServoDegrees)} °</th>
-          </tr>
-          <tr>
-            <th>Speed</th>
-            {/* @ts-expect-error */}
-            <th>{display(currentLog?.velocity)} m/s</th>
-          </tr>
-          <tr>
-            <th>Temperature</th>
-            <th>{display(currentLog?.temperature)} °C</th>
-          </tr>
-          <tr>
-            <th>Altitude</th>
-            <th>{display(currentLog?.altitude)} m</th>
-          </tr>
+          <tbody>
+            <tr>
+              <th>Pitch</th>
+              <th>{display(currentLog?.pitch?.toFixed(1))} °</th>
+            </tr>
+            <tr>
+              <th>Yaw</th>
+              <th>{display(currentLog?.yaw?.toFixed(1))} °</th>
+            </tr>
+            <tr>
+              <th>Roll</th>
+              {/* @ts-expect-error */}
+              <th>{display(currentLog?.roll?.toFixed(1))} °</th>
+            </tr>
+            <tr>
+              <th>Pitch Servo</th>
+              <th>
+                {/* @ts-expect-error */}
+                {display(currentLog?.nominalPitchServoDegrees?.toFixed(1))} °
+              </th>
+            </tr>
+            <tr>
+              <th>Yaw Servo</th>
+              <th>
+                {/* @ts-expect-error */}
+                {display(currentLog?.nominalYawServoDegrees?.toFixed(1))} °
+              </th>
+            </tr>
+            <tr>
+              <th>Speed</th>
+              {/* @ts-expect-error */}
+              <th>{display(currentLog?.velocity?.toFixed(1))} m/s</th>
+            </tr>
+            <tr>
+              <th>Temperature</th>
+              <th>{display(currentLog?.temperature?.toFixed(1))} °C</th>
+            </tr>
+            <tr>
+              <th>Altitude</th>
+              <th>{display(currentLog?.altitude?.toFixed(1))} m</th>
+            </tr>
+          </tbody>
         </table>
       ) : null}
       {logs.length > 1 ? (
