@@ -172,7 +172,7 @@ const useTvcTestCommand = (flightId?: string) =>
 
 const useZeroTvcCommand = (flightId?: string) =>
   useMutation({
-    mutationFn: () => sendCommand(flightId, "zero_servos"),
+    mutationFn: () => sendCommand(flightId, "zero_tvc"),
   });
 
 export const FlightControlss: React.FC<FlightControlProps> = () => {
