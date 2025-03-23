@@ -19,11 +19,36 @@ const display = (value: unknown): ReactNode =>
 
 dayjs.extend(relativeTime);
 
-const getQualifiedUrl = () =>
-  window.location.protocol +
-  "//" +
-  window.location.hostname +
-  (window.location.hostname === "localhost" ? ":" + window.location.port : "");
+const getQualifiedUrl = (): string =>
+  typeof window === "undefined"
+    ? ""
+    : window.location.protocol +
+      "//" +
+      window.location.hostname +
+      (window.location.hostname === "localhost"
+        ? ":" + window.location.port
+        : "");
+
+const baseUrl = "https://spaceprogram.bolls.dev";
+
+const isCrossOrigin = baseUrl !== getQualifiedUrl();
+
+const getHeaders = (): Record<string, string> => {
+  if (!isCrossOrigin) return {};
+
+  const token = document.cookie.match(/auth=(.+);?/)?.[1];
+
+  if (!token) return {};
+
+  return {
+    /**
+     * in production, we can do authorization via cookies because the frontend and the backend are on the same hostname (spaceprogram.bolls.dev).
+     * in development, we can't use the cookie header (which is more secure, which is why we use it in production) because the frontend and the backend are on different hostnames (localhost:3000 and localhost:4000),
+     * and browser block cross-origin cookies by default.
+     */
+    Authorization: `Bearer ${token}`,
+  };
+};
 
 export async function getSocket(): Promise<
   Socket<ServerToClientEvents, ClientToServerEvents>
@@ -59,7 +84,9 @@ function useLogs(flightId?: string) {
     getSocket().then(async (newSocket) => {
       socket.current = newSocket;
 
-      const logsRes = await fetch(`/api/flights/${flightId}/logs`);
+      const logsRes = await fetch(baseUrl + `/api/flights/${flightId}/logs`, {
+        headers: getHeaders(),
+      });
       const logsData = await logsRes.json();
 
       setLogs(logsData.data);
@@ -83,7 +110,9 @@ function useLogs(flightId?: string) {
 }
 
 async function fetchCurrentFlight() {
-  const currentFlightRes = await fetch("/api/flights");
+  const currentFlightRes = await fetch(baseUrl + "/api/flights", {
+    headers: getHeaders(),
+  });
 
   const currentFlight: { id: string } | undefined = (
     await currentFlightRes.json()
@@ -107,10 +136,11 @@ async function sendCommand(
 ) {
   if (!flightId) return;
 
-  const takeoffRes = await fetch(`/api/flights/${flightId}/events`, {
+  const takeoffRes = await fetch(baseUrl + `/api/flights/${flightId}/events`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...getHeaders(),
     },
     body: JSON.stringify({
       sent: Date.now(),
@@ -273,7 +303,7 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
           </button>
           <a
             target="_blank"
-            href={`/api/flights/${data.id}/logs`}
+            href={baseUrl + `/api/flights/${data.id}/logs`}
             className="button"
           >
             View Logs ({logs.length})
