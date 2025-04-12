@@ -334,9 +334,7 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
             className="button"
             disabled={isSetParametersPending}
           >
-            {isSetParametersPending
-              ? "Sending..."
-              : "Set Parameters (sea level pressure)"}
+            {isSetParametersPending ? "Sending..." : "Set Params"}
           </button>
           <button
             onClick={onTvcTestClick}
