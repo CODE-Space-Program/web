@@ -175,6 +175,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
             lastReceived: i.lastReceived,
             duration: i.lastReceived - i.firstReceived,
             lastKnownState: i.lastKnownState,
+            maxAltitude: i.maxAltitude,
           })),
           paging: {
             nextCursor: null,
