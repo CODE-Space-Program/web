@@ -153,6 +153,7 @@ export async function buildFastify(): Promise<FastifyInstance> {
               lastKnownState: {
                 $last: "$data.state",
               },
+              maxAltitude: { $max: "$data.altitude" },
             },
           },
           {
