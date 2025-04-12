@@ -13,6 +13,7 @@ import type {
 import { useInterval } from "./useInterval";
 import ArtificialHorizon from "./ArtificialHorizon";
 import Chart from "./Chart";
+import TvcIndicator from "./TvcIndicator";
 
 const display = (value: unknown): ReactNode =>
   value == null ? "N/A" : (value as ReactNode);
@@ -161,6 +162,17 @@ const useTakeoffCommand = (flightId?: string) =>
     mutationFn: () => sendCommand(flightId, "start"),
   });
 
+const useSetParametersCommand = (flightId?: string) =>
+  useMutation<
+    unknown,
+    Error,
+    {
+      seaLevelPressure: number;
+    }
+  >({
+    mutationFn: (data) => sendCommand(flightId, "set_parameters", data),
+  });
+
 const useTvcTestCommand = (flightId?: string) =>
   useMutation<
     unknown,
@@ -201,10 +213,30 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
   } = useTvcTestCommand(data?.id);
 
   const {
+    mutate: sendSetParametersCommand,
+    isPending: isSetParametersPending,
+    failureReason: setParametersFailureReason,
+  } = useSetParametersCommand(data?.id);
+
+  const {
     mutate: sendZeroTvcCommand,
     isPending: isZeroTvcPending,
     failureReason: zeroTvcFailureReason,
   } = useZeroTvcCommand(data?.id);
+
+  const onSetParametersClick = async () => {
+    if (!data?.id) return;
+    const seaLevelPressure = prompt("Please enter sea level pressure:");
+    if (!seaLevelPressure) return;
+    try {
+      sendSetParametersCommand({
+        seaLevelPressure: parseFloat(seaLevelPressure),
+      });
+    } catch (err) {
+      console.error(err);
+      alert("Failed to send command: Failed to parse input parameters");
+    }
+  };
 
   const onTvcTestClick = async () => {
     if (!data?.id) return;
@@ -234,6 +266,7 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
     if (!data?.id) return;
 
     const password = prompt('Please enter "takeoff" to confirm:');
+    if (!password) return;
     if (
       typeof password === "string" &&
       password.trim().toLowerCase() !== "takeoff"
@@ -297,6 +330,15 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
             {isTakeoffPending ? "Sending..." : "Takeoff"}
           </button>
           <button
+            onClick={onSetParametersClick}
+            className="button"
+            disabled={isSetParametersPending}
+          >
+            {isSetParametersPending
+              ? "Sending..."
+              : "Set Parameters (sea level pressure)"}
+          </button>
+          <button
             onClick={onTvcTestClick}
             className="button"
             disabled={isTvcTestPending}
@@ -322,6 +364,20 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
             roll={(logs[logs.length - 1]?.data.yaw || 0) / 180}
             size="54px"
           />
+          <TvcIndicator
+            pitch={
+              (logs[logs.length - 1]?.data.nominalPitchServoDegrees || 0) /
+              360 /
+              360
+            }
+            yaw={
+              (logs[logs.length - 1]?.data.nominalYawServoDegrees || 0) /
+              360 /
+              360 /
+              3
+            }
+            size="54px"
+          />
         </div>
         {takeoffFailureReason && (
           <p>Takeoff failed: {takeoffFailureReason.message}</p>
@@ -331,6 +387,9 @@ export const FlightControlss: React.FC<FlightControlProps> = () => {
         )}
         {zeroTvcFailureReason && (
           <p>Test TVC failed: {zeroTvcFailureReason.message}</p>
+        )}
+        {setParametersFailureReason && (
+          <p>Set parameters failed: {setParametersFailureReason.message}</p>
         )}
       </div>
       {logs.length > 1 ? (
