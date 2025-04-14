@@ -12,6 +12,11 @@
   <body>
     <slot />
   </body>
+  <script>
+    // if ("serviceWorker" in navigator) {
+    //   navigator.serviceWorker.register("/worker.js");
+    // }
+  </script>
 </html>
 
 <style>
@@ -172,5 +177,111 @@
       right: 20px;
       left: 20px;
     }
+  }
+  :global(.inner-left-middle, .inner-right-middle) {
+    max-width: 420px;
+    width: 50%;
+    top: 50%;
+
+    position: absolute;
+
+    transform: translate(0, -50%);
+    color: white;
+
+    font:
+      16px/26px D-DIN-Regular,
+      Arial,
+      Verdana,
+      sans-serif;
+  }
+  :global(.inner-left-middle) {
+    left: 50px;
+  }
+  :global(.inner-right-middle) {
+    right: 50px;
+  }
+
+  :global(.inner-left-middle h2, .inner-right-middle h2) {
+    max-width: 90%;
+    font-size: 48px;
+    line-height: 48px;
+
+    margin: 0;
+
+    text-transform: uppercase;
+  }
+  :global(.inner-left-middle p, .inner-right-middle p) {
+    margin-top: 20px;
+    margin-bottom: 15px;
+
+    line-height: 1.6;
+
+    font-size: 1rem;
+  }
+  :global(table) {
+    width: 100%;
+
+    margin-top: 30px;
+    border-collapse: collapse;
+  }
+  :global(tbody) {
+  }
+  :global(tr) {
+    border-bottom: 1pt solid rgba(255, 255, 255, 0.3);
+  }
+  :global(td) {
+    font:
+      14px/18px D-DIN-Bold,
+      Arial,
+      Verdana,
+      sans-serif;
+
+    padding: 20px 0;
+  }
+  :global(td):first-child {
+    text-transform: uppercase;
+  }
+
+  :global(.collapsing) {
+    display: flex;
+  }
+  @media screen and (max-width: 600px) {
+    :global(.inner-left-middle) {
+      position: unset;
+
+      transform: none;
+
+      width: 100%;
+
+      left: 0 !important;
+
+      padding-top: 10rem;
+    }
+    :global(.collapsing) {
+      flex-direction: column;
+      align-items: center;
+
+      height: auto !important;
+    }
+    :global(.collapsing > .inner-right-middle) {
+      position: unset;
+      transform: none;
+
+      width: 100%;
+
+      right: 0 !important;
+
+      margin-top: 2rem;
+      margin-bottom: 3rem;
+    }
+    :global(.collapsing > video) {
+      width: 100% !important;
+      /* height: auto !important; */
+      height: 10rem !important;
+      margin: 0 !important;
+    }
+  }
+  :global(video) {
+    object-fit: cover;
   }
 </style>

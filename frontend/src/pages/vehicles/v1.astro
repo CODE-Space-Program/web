@@ -1,0 +1,151 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Header from "../../components/Header.astro";
+import Footer from "../../components/Footer.astro";
+import V1VehicleRender from "../../components/ComponentRender.tsx";
+import { Table } from "../../components/Table";
+import { Inner } from "../../components/Inner";
+---
+
+<Layout>
+  <Header />
+  <head>
+    <link
+      rel="preload"
+      href="/3d/v1.glb"
+      as="fetch"
+      type="model/gltf-binary"
+      crossorigin="anonymous"
+    />
+  </head>
+  <main style="margin: 0 auto; min-height: calc(100vh - 78px)">
+    <section
+      style="position: relative; width: 100%; height: 100vh; padding: 0 2rem"
+    >
+      <V1VehicleRender client:only="react" />
+      <Inner left middle>
+        <h2
+          class="animate"
+          style={{
+            opacity: 1,
+            visibility: "inherit",
+            translate: "none",
+            rotate: "none",
+            scale: "none",
+            transform: "translate3d(0px, 0px, 0px)",
+          }}
+        >
+          V1
+        </h2>
+        <p
+          class="animate"
+          style="opacity: 1; visibility: inherit; translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px);"
+        >
+          The V1 is the first rocket we built, and was already intended to
+          perform a propulsion controlled landing. Sadly, it has an annoying
+          tendency to do unscheduled backflips. But hey, it flies!
+        </p>
+        <Table
+          data={[
+            ["Vehicle Height", "150cm"],
+            ["Vehicle Diameter", "75mm"],
+            ["Vehicle Weight", "530g"],
+            ["Max Altitude", "6m"],
+          ]}
+        />
+      </Inner>
+    </section>
+    <section
+      class="collapsing"
+      style="position: relative; width: 100%; height: 100vh; padding: 0 2rem"
+    >
+      <video
+        autoplay
+        loop
+        muted
+        preload="auto"
+        src="/flights/v1/1.mov"
+        style="max-width: 47.25rem; height: 47.25rem; width: 54%; margin-left: 50px;"
+      ></video>
+      <Inner right middle>
+        <h2
+          class="animate"
+          style="opacity: 1; visibility: inherit; translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px);"
+        >
+          Flight 1
+        </h2>
+        <p
+          class="animate"
+          style="opacity: 1; visibility: inherit; translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px);"
+        >
+          After ignition of the ascent motor, the rocket immediately started
+          flipping. The descent motor ignited while the rocket was already on
+          the ground, causing it to dig into the dirt.
+        </p>
+      </Inner>
+    </section>
+    <section
+      class="collapsing"
+      style="position: relative; width: 100%; height: 100vh; padding: 0 2rem"
+    >
+      <video
+        autoplay
+        loop
+        muted
+        preload="auto"
+        src="/flights/v1/1.mov"
+        style="max-width: 47.25rem; height: 47.25rem; width: 54%; margin-left: 50px;"
+      ></video>
+      <Inner right middle>
+        <h2
+          class="animate"
+          style="opacity: 1; visibility: inherit; translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px);"
+        >
+          Flight 2
+        </h2>
+        <p
+          class="animate"
+          style="opacity: 1; visibility: inherit; translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px);"
+        >
+          For the previous launch we had used the PID gains we manually
+          calculated. For this flight, we decided to switch to the gains we got
+          from the OpenRocket simulation. Shortly ignition of the ascent motor,
+          the battery slipped out of the case, causing the entire rocket to lose
+          power. The descent motor did not ignite.
+        </p>
+      </Inner>
+    </section>
+    <section
+      class="collapsing"
+      style="position: relative; width: 100%; height: 100vh; padding: 0 2rem"
+    >
+      <video
+        autoplay
+        loop
+        muted
+        preload="auto"
+        src="/flights/v1/1.mov"
+        style="max-width: 47.25rem; height: 47.25rem; width: 54%; margin-left: 50px;"
+      ></video>
+      <Inner right middle>
+        <h2
+          class="animate"
+          style="opacity: 1; visibility: inherit; translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px);"
+        >
+          Flight 3
+        </h2>
+        <p
+          class="animate"
+          style="opacity: 1; visibility: inherit; translate: none; rotate: none; scale: none; transform: translate3d(0px, 0px, 0px);"
+        >
+          We realized that we hadn't accounted for the gear reduction on our
+          tvc, causing it to move only one quarter of what we wanted it to. The
+          battery was provisionally taped into place. The nose cone blew off,
+          most likely by the pressure. Most promising because it caught itself
+          again.
+        </p>
+      </Inner>
+    </section>
+  </main>
+  <Footer />
+</Layout>

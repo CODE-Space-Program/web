@@ -11,14 +11,18 @@ tags: ["astro", "blogging", "learning in public", "successes"]
 
 # CODE Space Program
 
+![team picture](/team.webp)
+
 We are a student-led project group at [CODE University of Applied Sciences](https://code.berlin).<br>
-Over the course of spring semester 2025, we are developing a rocket that is capable of doing a propulsion controlled landing.<br>
+Our goal is to develop a rocket that is capable of a propulsion controlled landing.<br>
 We write our own software, solder our own flight computer circuitry, and 3D-print our own parts.<br>
-Since we first got the idea to build a rocket last year, we honed our skills in preparation for this project, and we have been able to make rapid progress since we officially started working on the project on March 6th 2025.
+The first phase started on March 6th 2025, when we officially kicked off the project.<br>
+Five weeks later, on April 12th, we performed our first three launches using our [V1 rocket design](/vehicles/v1). <br>
+We are currently taking a break, and plan to pick up the project again sometime in summer 2025.
 
 ## Overview
 
-The rocket is propelled by a D9-P rocket motor that provides nine newtons of thrust.<br>
+The rocket is propelled by a [D9 rocket motor](https://www.raketenmodellbau-klima.de/Ratgeber/Modellraketen/Raketenmotorauswahl.htm?p=1160) that provides nine newtons of thrust.<br>
 Under ideal conditions, the rocket would reach an altitude of 25 meters, but due to imbalances and wind, it will naturally start to tilt.<br>
 To combat this, we have a thrust vector control system (a gimbal that can tilt the rocket motor in all directions using two 9g servos), which will attempt to hold the rocket perfectly vertical.<br>
 We don’t control the TVC manually, it is autonomously controlled by our flight computer.<br>
@@ -137,4 +141,8 @@ thead th:last-child, td:last-child {
     padding-inline-end: 0;
 }
 code{font-size:13px;line-height:19.5px;padding:0.25rem;background: #1E242A;border-radius:0.25rem;color:rgb(240, 246, 252);}
+
+main img {
+  width: 100%;
+}
     </style>
